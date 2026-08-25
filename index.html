@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Smart Farm Management System</title>
+
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin: 10px auto; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sensor-val { font-size: 24px; font-weight: bold; color: #2e7d32; }
+        input, button { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #2e7d32; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #1b5e20; }
+        #dashboard { display: none; }
+    </style>
+</head>
+<body>
+
+    <h2>🌱 IoT Smart Farm Management System</h2>
+
+    <!-- LOGIN FORM -->
+    <div id="login-box" class="card">
+        <h3>Farmer / Admin Login</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <p id="login-msg" style="color:red;"></p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+        <div class="card">
+            <h3>🌡️ Temperature</h3>
+            <p class="sensor-val" id="temp">-- °C</p>
+        </div>
+        <div class="card">
+            <h3>💧 Humidity</h3>
+            <p class="sensor-val" id="hum">-- %</p>
+        </div>
+        <div class="card">
+            <h3>🌱 Soil Moisture</h3>
+            <p class="sensor-val" id="soil">-- %</p>
+        </div>
+        <div class="card">
+            <h3>🚰 Water Level</h3>
+            <p class="sensor-val" id="water">-- %</p>
+        </div>
+        <button onclick="logout()" style="background:#c62828; width: 200px;">Logout</button>
+    </div>
+
+    <script>
+        // Supabase Credentials
+        const SUPABASE_URL = "https://fqqwlvreqnxkbvbjjrol.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_q50rZScT_Y05tprM2GfTHQ_ZlJNH"; 
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Simple Login Check
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            // Simple validation for testing (pwede ikonekta sa database users table)
+            if (user === "admin" && pass === "admin123") {
+                document.getElementById('login-box').style.display = "none";
+                document.getElementById('dashboard').style.display = "block";
+                fetchSensorData();
+                setInterval(fetchSensorData, 3000); // Auto update every 3 seconds
+            } else {
+                document.getElementById('login-msg').innerText = "Maling Username o Password!";
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // Fetch Latest Sensor Data
+        async function fetchSensorData() {
+            const { data, error } = await supabase
+                .from('sensor_data')
+                .select('*')
+                .order('recorded_at', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                const latest = data[0];
+                document.getElementById('temp').innerText = (latest.temperature || 0) + " °C";
+                document.getElementById('hum').innerText = (latest.humidity || 0) + " %";
+                document.getElementById('soil').innerText = (latest.soil_moisture || 0) + " %";
+                document.getElementById('water').innerText = (latest.water_level || 0) + " %";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -4,231 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yahikos Smart Farm System</title>
-    <!-- Supabase JS Client -->
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Leaflet CSS & JS for GPS Map -->
+    <!-- Leaflet JS & CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --accent-color: #0288d1;
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            color: var(--text-color);
-        }
-
-        /* LOGIN CONTAINER */
-        .login-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .login-card {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-        }
-
-        .brand-logo {
-            width: 70px;
-            height: 70px;
-            background: #e8f5e9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-        }
-
-        .brand-logo svg {
-            width: 40px;
-            height: 40px;
-            fill: var(--primary-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-login:hover {
-            background-color: #1b5e20;
-        }
-
-        .error-msg {
-            color: #d32f2f;
-            font-size: 13px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        /* MAIN DASHBOARD CONTAINER */
-        #dashboard-view {
-            display: none;
-        }
-
-        .navbar {
-            background: var(--primary-color);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .main-content {
-            padding: 20px;
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        .badge-role {
-            background: rgba(255,255,255,0.2);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--primary-color);
-        }
-
-        #map {
-            height: 350px;
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        /* Admin Specific Controls */
-        .admin-only {
-            display: none;
-        }
+        :root { --primary: #2e7d32; --admin: #1565c0; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .portal-toggle { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-weight: bold; color: #777; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-color: var(--primary); }
+        .tab-btn.admin-tab.active { color: var(--admin); border-color: var(--admin); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn-submit { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-admin { background-color: var(--admin) !important; }
+        .msg-box { margin-top: 10px; font-size: 13px; text-align: center; display: none; }
+        
+        /* DASHBOARD */
+        #dashboard-view { display: none; }
+        .navbar { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .main-content { padding: 20px; max-width: 1100px; margin: auto; }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        #map { height: 380px; width: 100%; border-radius: 8px; }
+        .customer-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        .customer-table th, .customer-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        .customer-table th { background: #f0f4f8; }
+        .btn-gmaps { background: #4285F4; color: white; border: none; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
+    <!-- AUTHENTICATION SCREEN -->
     <div id="login-view" class="login-wrapper">
         <div class="login-card">
-            <!-- Leaf & Tech Logo -->
-            <div class="brand-logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M17,8C15.3,8 13.9,8.9 13.1,10.2C11.5,8.8 9.3,8 7,8C3.1,8 0,11.1 0,15C0,18.9 3.1,22 7,22C10.9,22 14,18.9 14,15C14,14.6 14,14.2 13.9,13.8C14.8,12.7 16.1,12 17.5,12C19.4,12 21,13.6 21,15.5C21,17.4 19.4,19 17.5,19H16V21H17.5C20.5,21 23,18.5 23,15.5C23,12.5 20.5,10 17.5,10H17V8Z"/>
-                </svg>
-            </div>
-            <h2>Yahikos Smart Farm</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">IoT Farm Management & Tracking</p>
+            <h2 style="text-align: center; margin-top: 0;">🌱 Yahikos Smart Farm</h2>
             
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="username" placeholder="Enter username">
+            <div class="portal-toggle">
+                <button class="tab-btn active" id="btn-cust-tab" onclick="switchPortal('customer')">Customer Portal</button>
+                <button class="tab-btn admin-tab" id="btn-admin-tab" onclick="switchPortal('admin')">Admin Access</button>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" placeholder="Enter password">
+
+            <!-- CUSTOMER LOGIN / REGISTER -->
+            <div id="customer-form">
+                <p style="font-size: 12px; color: #666;">Mo-login o mag-register ang gipang-installan sa IoT System.</p>
+                <div class="form-group"><label>Customer Username</label><input type="text" id="cust-username" placeholder="Enter or create username"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="cust-password" placeholder="Enter password"></div>
+                <div class="form-group"><label>Contact Phone Number</label><input type="text" id="cust-phone" placeholder="e.g. 09123456789"></div>
+                <button class="btn-submit" onclick="handleCustomerAuth()">Login / Register Customer</button>
             </div>
-            <button class="btn-login" onclick="handleLogin()">Login to System</button>
-            <div id="login-error" class="error-msg"></div>
+
+            <!-- ADMIN LOGIN -->
+            <div id="admin-form" style="display: none;">
+                <p style="font-size: 12px; color: #666;">I-enter ang opisyal nga Admin Credentials.</p>
+                <div class="form-group"><label>Admin Username</label><input type="text" id="admin-username" placeholder="Enter Admin Username"></div>
+                <div class="form-group"><label>Admin Password</label><input type="password" id="admin-password" placeholder="Enter Admin Password"></div>
+                <button class="btn-submit btn-admin" onclick="handleAdminAuth()">Login as Admin</button>
+            </div>
+
+            <div id="auth-msg" class="msg-box"></div>
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD SCREEN -->
+    <!-- MAIN DASHBOARD -->
     <div id="dashboard-view">
-        <div class="navbar">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="margin:0;">🌱 Yahikos Smart Farm</h3>
-                <span id="user-role-badge" class="badge-role">Customer</span>
+        <div class="navbar" id="top-navbar">
+            <div>
+                <h3 style="margin: 0; display: inline;">🌱 Yahikos Smart Farm</h3>
+                <span id="role-badge" style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 12px; margin-left: 10px;"></span>
             </div>
             <div>
-                <span id="current-user-display" style="margin-right: 15px;"></span>
-                <button onclick="handleLogout()" style="background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
+                <span id="user-display" style="margin-right: 15px;"></span>
+                <button onclick="logout()" style="background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
             </div>
         </div>
 
         <div class="main-content">
-            <!-- Telemetry Cards -->
             <div class="grid-cards">
-                <div class="card">
-                    <h4>🌡️ Temperature</h4>
-                    <p id="val-temp" style="font-size: 24px; font-weight: bold;">-- °C</p>
-                </div>
-                <div class="card">
-                    <h4>💧 Soil Moisture</h4>
-                    <p id="val-soil" style="font-size: 24px; font-weight: bold;">-- %</p>
-                </div>
-                <div class="card">
-                    <h4>🚰 Water Level</h4>
-                    <p id="val-water" style="font-size: 24px; font-weight: bold;">-- %</p>
-                </div>
-                <div class="card">
-                    <h4>⚙️ Pump Status</h4>
-                    <p id="val-pump" style="font-size: 24px; font-weight: bold; color: #2e7d32;">OFF</p>
-                </div>
+                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">-- °C</p></div>
+                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">-- %</p></div>
+                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">-- %</p></div>
+                <div class="card"><h4>⚙️ Pump Status</h4><p id="val-pump" style="font-size: 24px; font-weight: bold; color: #2e7d32;">OFF</p></div>
             </div>
 
-            <!-- Admin Controls Section (Shown for Admin only) -->
-            <div class="admin-only" id="admin-panel" style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                ⚙️ <b>Admin Control Panel:</b> Manual Pump Override & Sensor Threshold Settings are active.
+            <!-- ADMIN ONLY LIST -->
+            <div id="admin-controls" style="display: none; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin-top:0;">📋 Installed Customers & GPS Google Maps Redirect</h4>
+                <table class="customer-table">
+                    <thead>
+                        <tr><th>Customer</th><th>Phone</th><th>Last Login</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="customer-list-body"></tbody>
+                </table>
             </div>
 
-            <!-- GPS Location Tracker Map -->
-            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <h4 style="margin-top:0;">📍 Live Farm & User Location Map</h4>
+            <div style="background: white; padding: 15px; border-radius: 8px;">
+                <h4 style="margin-top: 0;">📍 Interactive Farm Location Tracker</h4>
                 <div id="map"></div>
             </div>
         </div>
@@ -239,108 +115,123 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdMdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2Nzk2NzIsImV4cCI6MjA2MjI1NTY3Mn0.RjC0_t6tUal-G31xZ2XGk3vE37U8I-l851I1R-7V4lE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let map, userMarker;
+        let map, userMarkers = [];
 
-        async function handleLogin() {
-            const usernameInput = document.getElementById('username').value.trim();
-            const passwordInput = document.getElementById('password').value.trim();
-            const errorMsg = document.getElementById('login-error');
-
-            if (!usernameInput || !passwordInput) {
-                errorMsg.innerText = "Palihug i-type ang Username ug Password!";
-                errorMsg.style.display = "block";
-                return;
+        function switchPortal(portal) {
+            document.getElementById('auth-msg').style.display = 'none';
+            if(portal === 'customer') {
+                document.getElementById('customer-form').style.display = 'block';
+                document.getElementById('admin-form').style.display = 'none';
+                document.getElementById('btn-cust-tab').classList.add('active');
+                document.getElementById('btn-admin-tab').classList.remove('active');
+            } else {
+                document.getElementById('customer-form').style.display = 'none';
+                document.getElementById('admin-form').style.display = 'block';
+                document.getElementById('btn-admin-tab').classList.add('active');
+                document.getElementById('btn-cust-tab').classList.remove('active');
             }
+        }
+
+        async function handleCustomerAuth() {
+            const username = document.getElementById('cust-username').value.trim();
+            const password = document.getElementById('cust-password').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+
+            if (!username || !password) { showMsg("I-type ang username ug password!", "red"); return; }
 
             try {
-                let { data: user, error } = await _supabase
-                    .from('users')
-                    .select('*')
-                    .eq('username', usernameInput)
-                    .maybeSingle();
-
-                if (error) throw error;
+                let { data: user } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
 
                 if (user) {
-                    if (user.password === passwordInput) {
-                        loginSuccess(user.username, user.role || 'customer');
-                    } else {
-                        errorMsg.innerText = "Sayo ang password!";
-                        errorMsg.style.display = "block";
-                    }
+                    if (user.password === password) {
+                        saveLocationAndProceed(username, 'customer');
+                    } else { showMsg("Sayo ang password!", "red"); }
                 } else {
-                    // Auto-register bag-ong customer
-                    let { data: newUser, error: insertError } = await _supabase
-                        .from('users')
-                        .insert([{ username: usernameInput, password: passwordInput, role: 'customer' }])
-                        .select()
-                        .single();
-
-                    if (insertError) throw insertError;
-                    loginSuccess(usernameInput, 'customer');
+                    await _supabase.from('users').insert([{ username, password, phone_number: phone, role: 'customer' }]);
+                    saveLocationAndProceed(username, 'customer');
                 }
-            } catch (err) {
-                console.error(err);
-                errorMsg.innerText = "Error sa database access!";
-                errorMsg.style.display = "block";
-            }
+            } catch (err) { showMsg("Database Error!", "red"); }
         }
 
-        function loginSuccess(username, role) {
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('currentUser', username);
-            sessionStorage.setItem('userRole', role);
+        function handleAdminAuth() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
 
-            getAndSaveLocation(username);
-            renderDashboard(username, role);
+            if (username === 'YahikoPain143' && password === 'Y@hiko143') {
+                saveLocationAndProceed(username, 'admin');
+            } else { showMsg("Maling Admin Credentials!", "red"); }
         }
 
-        function getAndSaveLocation(username) {
+        function saveLocationAndProceed(username, role) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
+                    await _supabase.from('users').update({ latitude: lat, longitude: lng, last_login: new Date().toISOString() }).eq('username', username);
+                    launchDashboard(username, role, lat, lng);
+                }, () => { launchDashboard(username, role, null, null); });
+            } else { launchDashboard(username, role, null, null); }
+        }
 
-                    await _supabase
-                        .from('users')
-                        .update({ latitude: lat, longitude: lng })
-                        .eq('username', username);
+        async function launchDashboard(username, role, lat, lng) {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            document.getElementById('user-display').innerText = "👤 " + username;
+            document.getElementById('role-badge').innerText = role.toUpperCase();
 
-                    initMap(lat, lng, username);
+            initMap();
+
+            if (role === 'admin') {
+                document.getElementById('top-navbar').style.background = '#1565c0';
+                document.getElementById('admin-controls').style.display = 'block';
+                loadAllCustomersMap();
+            } else if (lat && lng) {
+                addMarker(lat, lng, `${username}'s Installation Site`, true);
+            }
+        }
+
+        function initMap() {
+            if(!map) {
+                map = L.map('map').setView([10.0, 124.5], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            }
+        }
+
+        async function loadAllCustomersMap() {
+            let { data: users } = await _supabase.from('users').select('*').eq('role', 'customer');
+            const tableBody = document.getElementById('customer-list-body');
+            tableBody.innerHTML = '';
+
+            if(users) {
+                users.forEach(u => {
+                    if (u.latitude && u.longitude) {
+                        const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
+                        addMarker(u.latitude, u.longitude, `<b>${u.username}</b><br>Phone: ${u.phone_number || 'N/A'}<br><a href="${gmapsUrl}" target="_blank">Open in Google Maps</a>`, false);
+                        
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td><b>${u.username}</b></td>
+                                <td>${u.phone_number || 'N/A'}</td>
+                                <td>${new Date(u.last_login).toLocaleString()}</td>
+                                <td><a href="${gmapsUrl}" target="_blank" class="btn-gmaps">🗺️ Navigate in Google Maps</a></td>
+                            </tr>`;
+                    }
                 });
             }
         }
 
-        function renderDashboard(username, role) {
-            document.getElementById('login-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'block';
-
-            document.getElementById('current-user-display').innerText = "👤 " + username;
-            document.getElementById('user-role-badge').innerText = role;
-
-            if (role === 'admin') {
-                document.getElementById('admin-panel').style.display = 'block';
-            } else {
-                document.getElementById('admin-panel').style.display = 'none';
-            }
+        function addMarker(lat, lng, popupText, center) {
+            const marker = L.marker([lat, lng]).addTo(map).bindPopup(popupText);
+            userMarkers.push(marker);
+            if(center) map.setView([lat, lng], 14);
         }
 
-        function initMap(lat, lng, username) {
-            if (!map) {
-                map = L.map('map').setView([lat, lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
-                }).addTo(map);
-            }
-            if (userMarker) map.removeLayer(userMarker);
-            userMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`<b>${username}'s Farm Location</b>`).openPopup();
+        function showMsg(text, color) {
+            const msgBox = document.getElementById('auth-msg');
+            msgBox.style.color = color; msgBox.innerText = text; msgBox.style.display = 'block';
         }
 
-        function handleLogout() {
-            sessionStorage.clear();
-            window.location.reload();
-        }
+        function logout() { window.location.reload(); }
     </script>
 </body>
 </html>

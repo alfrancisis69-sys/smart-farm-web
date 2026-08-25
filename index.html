@@ -43,10 +43,10 @@
             text-align: center;
         }
 
-        .login-card h2 { color: var(--primary-color); margin-bottom: 20px; }
+        .login-card h2 { color: var(--primary-color); margin-bottom: 5px; }
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
-        .input-group input, .input-group select {
+        .input-group input {
             width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
         }
 
@@ -102,26 +102,21 @@
         .badge-warning { background: #fff3e0; color: #ef6c00; }
         .badge-danger { background: #ffebee; color: #c62828; }
 
-        /* FORM STYLES */
         .form-section {
             background: var(--card-bg); padding: 20px; border-radius: 10px; max-width: 600px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-top: 15px;
         }
 
-        /* TABLE STYLES */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #e8f5e9; color: var(--primary-color); }
 
-        /* ALERT BOX */
         .alert-item {
             padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
         }
         .alert-danger { background-color: #ffebee; color: #c62828; border-left: 5px solid #c62828; }
-        .alert-warning { background-color: #fff3e0; color: #ef6c00; border-left: 5px solid #ef6c00; }
         .alert-info { background-color: #e3f2fd; color: #0288d1; border-left: 5px solid #0288d1; }
 
-        /* TOGGLE SWITCH */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -149,18 +144,17 @@
     <div id="login-container">
         <div class="login-card">
             <h2>🌱 Farmer Login</h2>
-            <p style="color:#666; font-size:14px;">Smart Farm Management System</p>
-            <form onsubmit="event.preventDefault(); handleLogin();">
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="username" value="admin" required>
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="password" value="admin123" required>
-                </div>
-                <button type="submit" class="btn">Login to System</button>
-            </form>
+            <p style="color:#666; font-size:14px; margin-bottom: 20px;">Smart Farm Management System</p>
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" value="admin" onkeydown="if(event.key==='Enter') handleLogin()">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" value="admin123" onkeydown="if(event.key==='Enter') handleLogin()">
+            </div>
+            <button type="button" class="btn" onclick="handleLogin()">Login to System</button>
             <p id="login-msg" style="color:red; margin-top:10px; font-size:14px;"></p>
         </div>
     </div>
@@ -229,7 +223,7 @@
 
                 <!-- 2. IRRIGATION CONTROL TAB -->
                 <div id="irrigation-tab" class="tab-content">
-                    <h2>Irrigation Control Management (Process 4.0)</h2>
+                    <h2>Irrigation Control Management</h2>
                     <p style="color:#666;">Automated or Manual Override for Water Pumps</p>
 
                     <div class="form-section">
@@ -266,43 +260,38 @@
 
                     <div class="form-section">
                         <h3>🌱 Crop Information</h3>
-                        <form onsubmit="event.preventDefault(); saveCropInfo();">
-                            <div class="input-group">
-                                <label>Crop Type / Name</label>
-                                <input type="text" id="crop-name" value="Rice / Corn" placeholder="e.g. Tomatoes">
-                            </div>
-                            <div class="input-group">
-                                <label>Field Section / Zone</label>
-                                <input type="text" id="field-zone" value="Section A - Plot 1">
-                            </div>
+                        <div class="input-group">
+                            <label>Crop Type / Name</label>
+                            <input type="text" id="crop-name" value="Rice / Corn">
+                        </div>
+                        <div class="input-group">
+                            <label>Field Section / Zone</label>
+                            <input type="text" id="field-zone" value="Section A - Plot 1">
+                        </div>
 
-                            <h3 style="margin-top:25px;">⚙️ Threshold Settings</h3>
-                            <div class="input-group">
-                                <label>Minimum Soil Moisture Trigger (%)</label>
-                                <input type="number" id="thresh-soil" value="30">
-                            </div>
-                            <div class="input-group">
-                                <label>Critical Water Tank Level Warning (%)</label>
-                                <input type="number" id="thresh-water" value="20">
-                            </div>
-                            <button type="submit" class="btn">Save Configuration</button>
-                        </form>
+                        <h3 style="margin-top:25px;">⚙️ Threshold Settings</h3>
+                        <div class="input-group">
+                            <label>Minimum Soil Moisture Trigger (%)</label>
+                            <input type="number" id="thresh-soil" value="30">
+                        </div>
+                        <div class="input-group">
+                            <label>Critical Water Tank Level Warning (%)</label>
+                            <input type="number" id="thresh-water" value="20">
+                        </div>
+                        <button type="button" class="btn" onclick="saveCropInfo()">Save Configuration</button>
                     </div>
                 </div>
 
                 <!-- 4. ALERTS & NOTIFICATIONS TAB -->
                 <div id="alerts-tab" class="tab-content">
-                    <h2>Alerts & Real-time Notifications (Process 5.0)</h2>
+                    <h2>Alerts & Real-time Notifications</h2>
                     <p style="color:#666;">Automated security and health warnings from field sensors</p>
-
-                    <div id="alert-list">
-                        <!-- Dynamic Alerts will appear here -->
-                    </div>
+                    <div id="alert-list"></div>
                 </div>
 
                 <!-- 5. HISTORICAL REPORTS TAB -->
                 <div id="reports-tab" class="tab-content">
-                    <h2>Historical Telemetry Logs & Reports (Process 5.0)</h2>
+                    <h2>Historical Telemetry Logs & Reports</h2>
                     <p style="color:#666;">Recorded telemetry log from D1 Farm Database</p>
 
                     <button class="btn" style="width:auto; margin-bottom:15px;" onclick="fetchSensorData()">🔄 Refresh Logs</button>
@@ -328,34 +317,30 @@
     </div>
 
     <script>
-        // SUPABASE CONFIG
         const SUPABASE_URL = "https://fqqwlvreqnxkbvbjjrol.supabase.co";
         const SUPABASE_KEY = "sb_publishable_q50rZScT_Y05tprM2GfTHQ_ZlJNH";
-        let supabase = null;
+        let dbClient = null;
 
-        try {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
-        } catch(e) { console.error("Supabase load error:", e); }
+        if (window.supabase && window.supabase.createClient) {
+            dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
 
-        // APP STATE
         let isPumpOn = false;
         let isAutoMode = true;
         let threshSoil = 30;
         let threshWater = 20;
 
-        // AUTH HANDLER
         function handleLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            if(u === "admin" && p === "admin123") {
+            
+            if (u === "admin" && p === "admin123") {
                 document.getElementById('login-container').style.display = "none";
                 document.getElementById('app-container').style.display = "block";
                 fetchSensorData();
-                setInterval(fetchSensorData, 3000); // Poll database every 3s
+                setInterval(fetchSensorData, 3000);
             } else {
-                document.getElementById('login-msg').innerText = "Invalid Farmer Credentials!";
+                document.getElementById('login-msg').innerText = "Maling Username o Password!";
             }
         }
 
@@ -363,18 +348,15 @@
             location.reload();
         }
 
-        // TAB SWITCHING
         function showTab(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('nav li a').forEach(a => a.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
             element.classList.add('active');
         }
 
-        // IRRIGATION CONTROLS
         function toggleMode(checkbox) {
-            isAutoMode = !checkbox.checked; // checked means manual
+            isAutoMode = !checkbox.checked;
             document.getElementById('current-mode-text').innerText = isAutoMode ? "Automatic" : "Manual Override";
             document.getElementById('mode-desc').innerText = isAutoMode ? 
                 "Auto Mode triggered by Soil Moisture threshold" : "Manual control active — farmer overrides system logic";
@@ -395,15 +377,14 @@
         function saveCropInfo() {
             threshSoil = parseFloat(document.getElementById('thresh-soil').value) || 30;
             threshWater = parseFloat(document.getElementById('thresh-water').value) || 20;
-            alert("Settings saved successfully! Threshold updated.");
+            alert("Settings saved successfully!");
         }
 
-        // FETCH SENSOR DATA FROM SUPABASE
         async function fetchSensorData() {
-            if(!supabase) return;
+            if(!dbClient) return;
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await dbClient
                     .from('sensor_data')
                     .select('*')
                     .order('recorded_at', { ascending: false })
@@ -411,17 +392,12 @@
 
                 if (data && data.length > 0) {
                     const current = data[0];
-
-                    // Update Live Telemetry Cards
                     document.getElementById('disp-temp').innerText = (current.temperature ?? '--') + " °C";
                     document.getElementById('disp-hum').innerText = (current.humidity ?? '--') + " %";
                     document.getElementById('disp-soil').innerText = (current.soil_moisture ?? '--') + " %";
                     document.getElementById('disp-water').innerText = (current.water_level ?? '--') + " %";
 
-                    // Evaluate Farm Health & Alerts
                     evaluateConditions(current);
-
-                    // Render Log Table
                     renderTable(data);
                 }
             } catch(err) {
@@ -437,33 +413,27 @@
 
             let alerts = [];
 
-            // Soil Moisture Evaluation
             if(soil < threshSoil) {
                 document.getElementById('soil-status').innerText = "Low Moisture!";
                 document.getElementById('soil-status').className = "status-badge badge-danger";
-                alerts.push({ type: 'danger', msg: `🚨 <strong>Low Soil Moisture Warning:</strong> Current level (${soil}%) is below target threshold (${threshSoil}%). Irrigation suggested!` });
-                
-                if(isAutoMode && !isPumpOn) {
-                    togglePump(); // Auto-start pump in Auto Mode
-                }
+                alerts.push({ type: 'danger', msg: `🚨 <strong>Low Soil Moisture Warning:</strong> Current level (${soil}%) is below target threshold (${threshSoil}%).` });
+                if(isAutoMode && !isPumpOn) togglePump();
             } else {
                 document.getElementById('soil-status').innerText = "Optimal";
                 document.getElementById('soil-status').className = "status-badge badge-success";
             }
 
-            // Water Tank Level Evaluation
             if(water < threshWater) {
                 document.getElementById('water-status').innerText = "Critical Level!";
                 document.getElementById('water-status').className = "status-badge badge-danger";
-                alerts.push({ type: 'danger', msg: `⚠️ <strong>Water Reservoir Low:</strong> Water level is at ${water}%. Please refill tank.` });
+                alerts.push({ type: 'danger', msg: `⚠️ <strong>Water Reservoir Low:</strong> Water level is at ${water}%.` });
             } else {
                 document.getElementById('water-status').innerText = "Sufficient";
                 document.getElementById('water-status').className = "status-badge badge-success";
             }
 
-            // Render Alerts tab
             if(alerts.length === 0) {
-                alertList.innerHTML = `<div class="alert-item alert-info">✅ All system parameters are within normal thresholds. Farm condition is healthy!</div>`;
+                alertList.innerHTML = `<div class="alert-item alert-info">✅ All system parameters are within normal thresholds.</div>`;
                 document.getElementById('farm-health').innerText = "Optimal Condition";
                 document.getElementById('farm-health').className = "status-badge badge-success";
             } else {

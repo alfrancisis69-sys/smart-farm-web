@@ -16,7 +16,7 @@
         .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
         .btn-submit { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-submit:hover { opacity: 0.9; }
         .msg-box { margin-top: 10px; font-size: 13px; text-align: center; display: none; }
@@ -27,19 +27,20 @@
         #dashboard-view { display: none; }
         .navbar { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .main-content { padding: 20px; max-width: 1100px; margin: auto; }
-        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        #map { height: 380px; width: 100%; border-radius: 8px; }
-        .customer-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
-        .customer-table th, .customer-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
-        .customer-table th { background: #f0f4f8; }
+        #map { height: 350px; width: 100%; border-radius: 8px; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        .data-table th { background: #f0f4f8; }
         .btn-gmaps { background: #4285F4; color: white; border: none; padding: 5px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: inline-block; }
         .btn-action { padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; color: white; font-weight: bold; }
         .btn-edit { background: #ff9800; }
         .btn-delete { background: #d32f2f; }
-        .btn-pump { width: 100%; margin-top: 10px; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-pump { width: 100%; margin-top: 10px; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
         .pump-on { background: #d32f2f; }
         .pump-off { background: #2e7d32; }
+        .section-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -98,22 +99,56 @@
 
         <div class="main-content">
             <div class="grid-cards">
-                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
-                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
-                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
+                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">28.5 °C</p></div>
+                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">65 %</p></div>
+                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">80 %</p></div>
                 <div class="card">
                     <h4>⚙️ Pump Control</h4>
-                    <p id="val-pump" style="font-size: 22px; font-weight: bold; color: #2e7d32; margin: 5px 0;">OFF</p>
+                    <p id="val-pump" style="font-size: 20px; font-weight: bold; color: #2e7d32; margin: 5px 0;">OFF</p>
                     <div id="pump-control-container"></div>
                 </div>
             </div>
 
-            <!-- ADMIN CONTROLS & CUSTOMER MANAGEMENT -->
+            <!-- CUSTOMER REPORT SECTION (Visible to Customers) -->
+            <div id="customer-report-section" class="section-box" style="display: none;">
+                <h4 style="margin-top:0; color: var(--primary);">🚨 Report Farm Error / Broken Tool to Admin</h4>
+                <p style="font-size: 12px; color: #666;">Naay guba nga sensor, depektosong wiring, o problema sa pump? Isulat diri aron mabasa sa Admin.</p>
+                <div class="form-group">
+                    <label>Issue Type / Component</label>
+                    <select id="rep-issue-type">
+                        <option value="Temperature Sensor">Temperature Sensor Error</option>
+                        <option value="Soil Moisture Sensor">Soil Moisture Sensor Error</option>
+                        <option value="Water Level Sensor">Water Level Sensor Error</option>
+                        <option value="Water Pump">Water Pump / Relay Issue</option>
+                        <option value="Wiring / Power">Wiring / Power Supply Issue</option>
+                        <option value="Other">Other Error / Bug</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description of Error / Problem</label>
+                    <textarea id="rep-description" rows="3" placeholder="Describe unsa ang nahitabo o unsay naguba..."></textarea>
+                </div>
+                <button class="btn-submit" onclick="submitErrorReport()">Submit Report to Admin</button>
+            </div>
+
+            <!-- ADMIN CONTROLS & REPORTS SECTION (Visible to Admin Only) -->
             <div id="admin-section" style="display: none;">
-                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4 style="margin-top:0;">📋 Admin Control Panel: Customer Records & GPS Tracker</h4>
+                <div class="section-box">
+                    <h4 style="margin-top:0; color: var(--admin);">📋 Customer Reports & Bug Fixes (Admin Panel)</h4>
                     <div style="overflow-x: auto;">
-                        <table class="customer-table">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Farm / User</th><th>Issue Type</th><th>Description</th><th>Date / Time</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="admin-reports-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <h4 style="margin-top:0; color: var(--admin);">📋 Customer Accounts & GPS Tracker</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
                             <thead>
                                 <tr><th>Farm Name</th><th>Username</th><th>Phone</th><th>Last Login</th><th>Actions</th></tr>
                             </thead>
@@ -122,8 +157,8 @@
                     </div>
                 </div>
 
-                <div style="background: white; padding: 15px; border-radius: 8px;">
-                    <h4 style="margin-top: 0;">📍 All Customer Farms GPS Tracker (Admin View Only)</h4>
+                <div class="section-box">
+                    <h4 style="margin-top: 0;">📍 All Customer Farms GPS Tracker</h4>
                     <div id="map"></div>
                 </div>
             </div>
@@ -136,6 +171,8 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let map, userMarkers = [];
+        let currentUser = null;
+        let currentRole = null;
 
         function switchForm(formName) {
             document.getElementById('form-login').style.display = formName === 'login' ? 'block' : 'none';
@@ -144,7 +181,6 @@
             document.getElementById('auth-msg').style.display = 'none';
         }
 
-        // Automatic IP Location Fetcher to prevent sea placement
         async function fetchIpLocation() {
             try {
                 let res = await fetch('https://ipapi.co/json/');
@@ -153,9 +189,9 @@
                     return { lat: data.latitude, lng: data.longitude };
                 }
             } catch (e) {
-                console.log("IP Geolocation fallback used");
+                console.log("IP Geolocation fallback");
             }
-            return { lat: 10.1500, lng: 124.4800 }; // Default Ubay area fallback
+            return { lat: 10.1055, lng: 124.4850 }; // Ubay, Bohol area
         }
 
         async function registerUser() {
@@ -171,7 +207,7 @@
 
             let { data: existing } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
             if (existing) {
-                showMsg("Username already taken. Please choose another one.", "red");
+                showMsg("Username already taken.", "red");
                 return;
             }
 
@@ -218,7 +254,6 @@
                 return;
             }
 
-            // Automatic IP Geolocation update on login
             let loc = await fetchIpLocation();
             await _supabase.from('users').update({ 
                 latitude: loc.lat, 
@@ -240,42 +275,47 @@
 
             let { data } = await _supabase.from('users').select('*').eq('username', username);
             if (!data || data.length === 0) {
-                showMsg("Username not found in records.", "red");
+                showMsg("Username not found.", "red");
                 return;
             }
 
             await _supabase.from('users').update({ password: newpass }).eq('username', username);
-            alert("Password updated successfully! You can now login.");
+            alert("Password updated successfully!");
             switchForm('login');
         }
 
         function launchDashboard(username, role, fullname) {
+            currentUser = fullname || username;
+            currentRole = role;
+
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
-            document.getElementById('user-display').innerText = "👤 " + (fullname || username);
+            document.getElementById('user-display').innerText = "👤 " + currentUser;
             document.getElementById('role-badge').innerText = role.toUpperCase();
 
             loadLiveSensorData();
-            setInterval(loadLiveSensorData, 4000); // Auto-refresh sensors every 4s
+            setInterval(loadLiveSensorData, 4000);
 
             const pumpContainer = document.getElementById('pump-control-container');
 
             if (role === 'admin') {
                 document.getElementById('top-navbar').style.background = '#1565c0';
                 document.getElementById('admin-section').style.display = 'block';
-                pumpContainer.innerHTML = `<span style="font-size:11px; color:#666;">(Admin View: Monitor Only)</span>`;
+                document.getElementById('customer-report-section').style.display = 'none';
+                pumpContainer.innerHTML = `<span style="font-size:11px; color:#666;">(Admin Monitor)</span>`;
                 initMap();
                 loadAdminCustomers();
+                loadAdminReports();
             } else {
                 document.getElementById('admin-section').style.display = 'none';
-                // Customer gets control over the pump
+                document.getElementById('customer-report-section').style.display = 'block';
                 pumpContainer.innerHTML = `<button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>`;
             }
         }
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.1500, 124.4800], 12);
+                map = L.map('map').setView([10.1055, 124.4850], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
             }
         }
@@ -294,13 +334,13 @@
                 document.getElementById('val-water').innerText = (reading.water_level ?? '80') + ' %';
                 
                 if(reading.pump_status !== undefined) {
-                    const statusText = reading.pump_status ? 'ON' : 'OFF';
-                    document.getElementById('val-pump').innerText = statusText;
-                    document.getElementById('val-pump').style.color = reading.pump_status ? '#d32f2f' : '#2e7d32';
+                    const isPumpOn = !!reading.pump_status;
+                    document.getElementById('val-pump').innerText = isPumpOn ? 'ON' : 'OFF';
+                    document.getElementById('val-pump').style.color = isPumpOn ? '#d32f2f' : '#2e7d32';
 
                     const toggleBtn = document.getElementById('btn-toggle-pump');
                     if (toggleBtn) {
-                        if (reading.pump_status) {
+                        if (isPumpOn) {
                             toggleBtn.innerText = "TURN OFF PUMP";
                             toggleBtn.className = "btn-pump pump-on";
                         } else {
@@ -320,15 +360,74 @@
             }
             let newStatus = !currentStatus;
 
-            // I-update sa Supabase aron mabasa sa ESP32
-            await _supabase.from('sensor_data').insert([{
-                temperature: data && data[0] ? data[0].temperature : 28,
-                soil_moisture: data && data[0] ? data[0].soil_moisture : 60,
-                water_level: data && data[0] ? data[0].water_level : 75,
+            let { error } = await _supabase.from('sensor_data').insert([{
+                temperature: data && data[0] ? data[0].temperature : 28.5,
+                soil_moisture: data && data[0] ? data[0].soil_moisture : 65,
+                water_level: data && data[0] ? data[0].water_level : 80,
                 pump_status: newStatus
             }]);
 
-            loadLiveSensorData();
+            if (error) {
+                alert("Error updating pump: " + error.message);
+            } else {
+                loadLiveSensorData();
+            }
+        }
+
+        async function submitErrorReport() {
+            const issueType = document.getElementById('rep-issue-type').value;
+            const description = document.getElementById('rep-description').value.trim();
+
+            if (!description) {
+                alert("Please describe the issue or error.");
+                return;
+            }
+
+            // Note: Siguraduha nga nakamake ka og table sa Supabase nga ginganlan og 'farm_reports' nga naay columns: customer_name, issue_type, description, created_at
+            let { error } = await _supabase.from('farm_reports').insert([{
+                customer_name: currentUser,
+                issue_type: issueType,
+                description: description,
+                created_at: new Date().toISOString()
+            }]);
+
+            if (error) {
+                // Kung wala pa na-create ang table, i-alert ang instructions
+                alert("Database Note: Please create a table named 'farm_reports' in Supabase with columns: customer_name, issue_type, description, created_at.\n\nError: " + error.message);
+            } else {
+                alert("Report successfully sent to Admin!");
+                document.getElementById('rep-description').value = '';
+            }
+        }
+
+        async function loadAdminReports() {
+            let { data: reports, error } = await _supabase.from('farm_reports').select('*').order('id', { ascending: false });
+            const tableBody = document.getElementById('admin-reports-body');
+            tableBody.innerHTML = '';
+
+            if (error || !reports || reports.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No bug or error reports from customers yet. (Make sure 'farm_reports' table exists in Supabase)</td></tr>`;
+                return;
+            }
+
+            reports.forEach(r => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><b>${r.customer_name || 'N/A'}</b></td>
+                        <td><span style="color: #d32f2f; font-weight: bold;">${r.issue_type}</span></td>
+                        <td>${r.description}</td>
+                        <td>${r.created_at ? new Date(r.created_at).toLocaleString() : 'N/A'}</td>
+                        <td><button class="btn-action btn-edit" onclick="resolveReport(${r.id})">Mark Fixed</button></td>
+                    </tr>`;
+            });
+        }
+
+        async function resolveReport(reportId) {
+            if (confirm("Mark this issue as fixed/resolved?")) {
+                await _supabase.from('farm_reports').delete().eq('id', reportId);
+                alert("Report resolved and removed!");
+                loadAdminReports();
+            }
         }
 
         async function loadAdminCustomers() {
@@ -369,7 +468,7 @@
             const newName = prompt("Enter new Farm / Customer Name:", oldName);
             if (newName !== null && newName.trim() !== "") {
                 await _supabase.from('users').update({ full_name: newName.trim() }).eq('username', username);
-                alert("Customer name updated successfully!");
+                alert("Customer name updated!");
                 loadAdminCustomers();
             }
         }
@@ -377,7 +476,7 @@
         async function deleteCustomer(username) {
             if (confirm(`Are you sure you want to remove customer "${username}"?`)) {
                 await _supabase.from('users').delete().eq('username', username);
-                alert("Customer successfully removed.");
+                alert("Customer removed.");
                 loadAdminCustomers();
             }
         }

@@ -44,7 +44,7 @@
     <!-- AUTHENTICATION SCREEN -->
     <div id="auth-view" class="login-wrapper">
         <div class="login-card">
-            <h2 id="auth-title" style="text-align: center; margin-top: 0;">🌱 Yahikos Smart Farm</h2>
+            <h2 style="text-align: center; margin-top: 0;">🌱 Yahikos Smart Farm</h2>
             
             <!-- LOGIN FORM -->
             <div id="form-login">
@@ -95,9 +95,9 @@
 
         <div class="main-content">
             <div class="grid-cards">
-                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">28.5 °C</p></div>
-                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">64 %</p></div>
-                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">82 %</p></div>
+                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
+                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
+                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
                 <div class="card"><h4>⚙️ Pump Status</h4><p id="val-pump" style="font-size: 24px; font-weight: bold; color: #2e7d32;">AUTO</p></div>
             </div>
 
@@ -115,7 +115,7 @@
             </div>
 
             <div style="background: white; padding: 15px; border-radius: 8px;">
-                <h4 style="margin-top: 0;">📍 Interactive Farm Location Tracker</h4>
+                <h4 style="margin-top: 0;" id="map-title">📍 Interactive Farm Location Tracker</h4>
                 <div id="map"></div>
             </div>
         </div>
@@ -175,10 +175,31 @@
                         launchDashboard(username, 'customer', fullname);
                     }
                 }, () => {
-                    showMsg("Geolocation permission is required to register farm location.", "red");
+                    // Fallback kung ma-block ang geolocation aron ma-register gihapon
+                    registerWithoutLocation(fullname, username, password, phone);
                 }, { timeout: 10000 });
             } else {
-                showMsg("Geolocation is not supported by your browser.", "red");
+                registerWithoutLocation(fullname, username, password, phone);
+            }
+        }
+
+        async function registerWithoutLocation(fullname, username, password, phone) {
+            const { error } = await _supabase.from('users').insert([{
+                full_name: fullname,
+                username: username,
+                password: password,
+                phone_number: phone,
+                role: 'customer',
+                latitude: 10.15,
+                longitude: 124.48,
+                last_login: new Date().toISOString()
+            }]);
+
+            if (error) {
+                showMsg("Registration error: " + error.message, "red");
+            } else {
+                alert("Registration successful (Default location used)!");
+                launchDashboard(username, 'customer', fullname);
             }
         }
 
@@ -193,31 +214,15 @@
 
             let { data, error } = await _supabase.from('users').select('*').eq('username', username);
 
-            if (error) {
-                showMsg("Database error: " + error.message, "red");
-                return;
-            }
-
-            if (!data || data.length === 0) {
+            if (error || !data || data.length === 0) {
                 showMsg("User account not found.", "red");
                 return;
             }
 
             let user = data[0];
-
             if (user.password !== password) {
                 showMsg("Incorrect password.", "red");
                 return;
-            }
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await _supabase.from('users').update({ 
-                        latitude: pos.coords.latitude, 
-                        longitude: pos.coords.longitude, 
-                        last_login: new Date().toISOString() 
-                    }).eq('username', username);
-                }, () => {}, { timeout: 5000 });
             }
 
             launchDashboard(user.username, user.role, user.full_name);
@@ -250,20 +255,48 @@
             document.getElementById('role-badge').innerText = role.toUpperCase();
 
             initMap();
+            loadLiveSensorData();
+            setInterval(loadLiveSensorData, 5000); // Auto-refresh every 5 seconds
 
             if (role === 'admin') {
                 document.getElementById('top-navbar').style.background = '#1565c0';
                 document.getElementById('admin-controls').style.display = 'block';
+                document.getElementById('map-title').innerText = '📍 All Customer Farms GPS Tracker';
                 loadAdminCustomers();
             } else {
+                document.getElementById('map-title').innerText = '📍 Your Farm Location';
                 loadCustomerMapMarker(username);
             }
         }
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.0, 124.5], 10);
+                map = L.map('map').setView([10.15, 124.48], 11);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            }
+        }
+
+        async function loadLiveSensorData() {
+            // Kuhaa ang pinakabag-o nga sensor reading gikan sa sensor_data table sa Supabase
+            let { data, error } = await _supabase
+                .from('sensor_data')
+                .select('*')
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                let reading = data[0];
+                document.getElementById('val-temp').innerText = (reading.temperature ?? '28.5') + ' °C';
+                document.getElementById('val-soil').innerText = (reading.soil_moisture ?? '65') + ' %';
+                document.getElementById('val-water').innerText = (reading.water_level ?? '80') + ' %';
+                if(reading.pump_status !== undefined) {
+                    document.getElementById('val-pump').innerText = reading.pump_status ? 'ON' : 'OFF';
+                }
+            } else {
+                // Default fallback kung wala pay data gikan sa ESP32
+                document.getElementById('val-temp').innerText = '28.5 °C';
+                document.getElementById('val-soil').innerText = '64 %';
+                document.getElementById('val-water').innerText = '82 %';
             }
         }
 
@@ -272,7 +305,7 @@
             if (data && data.length > 0) {
                 let user = data[0];
                 if (user.latitude && user.longitude) {
-                    addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Farm Location`);
+                    addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Smart Farm Location`);
                 }
             }
         }
@@ -326,7 +359,7 @@
         }
 
         async function deleteCustomer(username) {
-            if (confirm(`Are you sure you want to remove customer "${username}" from the active product list?`)) {
+            if (confirm(`Are you sure you want to remove customer "${username}"?`)) {
                 await _supabase.from('users').delete().eq('username', username);
                 alert("Customer successfully removed.");
                 loadAdminCustomers();

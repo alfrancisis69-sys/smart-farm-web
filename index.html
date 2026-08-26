@@ -193,8 +193,6 @@
 
             let { data, error } = await _supabase.from('users').select('*').eq('username', username);
 
-            console.log("Supabase Response:", { data, error });
-
             if (error) {
                 showMsg("Database error: " + error.message, "red");
                 return;
@@ -263,7 +261,7 @@
         }
 
         function initMap() {
-            if(!map) {
+            if (!map) {
                 map = L.map('map').setView([10.0, 124.5], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
             }
@@ -271,9 +269,9 @@
 
         async function loadCustomerMapMarker(username) {
             let { data } = await _supabase.from('users').select('*').eq('username', username);
-            if(data && data.length > 0) {
+            if (data && data.length > 0) {
                 let user = data[0];
-                if(user.latitude && user.longitude) {
+                if (user.latitude && user.longitude) {
                     addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Farm Location`);
                 }
             }
@@ -287,7 +285,7 @@
             userMarkers.forEach(m => map.removeLayer(m));
             userMarkers = [];
 
-            if(users && users.length > 0) {
+            if (users && users.length > 0) {
                 users.forEach(u => {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;

@@ -175,7 +175,6 @@
                         launchDashboard(username, 'customer', fullname);
                     }
                 }, () => {
-                    // Fallback kung ma-block ang geolocation aron ma-register gihapon
                     registerWithoutLocation(fullname, username, password, phone);
                 }, { timeout: 10000 });
             } else {
@@ -190,8 +189,8 @@
                 password: password,
                 phone_number: phone,
                 role: 'customer',
-                latitude: 10.15,
-                longitude: 124.48,
+                latitude: 10.0883,  // Ubay, Bohol mainland reference
+                longitude: 124.4617,
                 last_login: new Date().toISOString()
             }]);
 
@@ -225,7 +224,27 @@
                 return;
             }
 
-            launchDashboard(user.username, user.role, user.full_name);
+            // AUTOMATIC GPS TRACKING ON LOGIN
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    
+                    await _supabase.from('users').update({ 
+                        latitude: lat, 
+                        longitude: lng, 
+                        last_login: new Date().toISOString() 
+                    }).eq('username', username);
+
+                    launchDashboard(username, user.role, user.full_name);
+                }, async () => {
+                    await _supabase.from('users').update({ last_login: new Date().toISOString() }).eq('username', username);
+                    launchDashboard(username, user.role, user.full_name);
+                }, { timeout: 8000 });
+            } else {
+                await _supabase.from('users').update({ last_login: new Date().toISOString() }).eq('username', username);
+                launchDashboard(username, user.role, user.full_name);
+            }
         }
 
         async function resetPassword() {
@@ -271,13 +290,12 @@
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.15, 124.48], 11);
+                map = L.map('map').setView([10.0883, 124.4617], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
             }
         }
 
         async function loadLiveSensorData() {
-            // Kuhaa ang pinakabag-o nga sensor reading gikan sa sensor_data table sa Supabase
             let { data, error } = await _supabase
                 .from('sensor_data')
                 .select('*')
@@ -293,7 +311,6 @@
                     document.getElementById('val-pump').innerText = reading.pump_status ? 'ON' : 'OFF';
                 }
             } else {
-                // Default fallback kung wala pay data gikan sa ESP32
                 document.getElementById('val-temp').innerText = '28.5 °C';
                 document.getElementById('val-soil').innerText = '64 %';
                 document.getElementById('val-water').innerText = '82 %';
@@ -346,7 +363,7 @@
         function addMarker(lat, lng, popupText) {
             const marker = L.marker([lat, lng]).addTo(map).bindPopup(popupText);
             userMarkers.push(marker);
-            map.setView([lat, lng], 13);
+            map.setView([lat, lng], 14);
         }
 
         async function editCustomer(username, oldName) {

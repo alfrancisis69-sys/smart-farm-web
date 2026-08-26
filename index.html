@@ -37,6 +37,9 @@
         .btn-action { padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; color: white; font-weight: bold; }
         .btn-edit { background: #ff9800; }
         .btn-delete { background: #d32f2f; }
+        .btn-pump { width: 100%; margin-top: 10px; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        .pump-on { background: #d32f2f; }
+        .pump-off { background: #2e7d32; }
     </style>
 </head>
 <body>
@@ -59,11 +62,11 @@
             <!-- REGISTER FORM -->
             <div id="form-register" style="display: none;">
                 <p style="font-size: 12px; color: #666; text-align: center;">Create a new customer account.</p>
-                <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Juan Dela Cruz Farm"></div>
+                <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Farm"></div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Create username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
                 <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone" placeholder="09123456789"></div>
-                <button class="btn-submit" onclick="registerUser()">Register & Share Location</button>
+                <button class="btn-submit" onclick="registerUser()">Register Farm</button>
                 <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
             </div>
 
@@ -98,25 +101,31 @@
                 <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
                 <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
                 <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">Loading...</p></div>
-                <div class="card"><h4>⚙️ Pump Status</h4><p id="val-pump" style="font-size: 24px; font-weight: bold; color: #2e7d32;">AUTO</p></div>
-            </div>
-
-            <!-- ADMIN CONTROLS & CUSTOMER MANAGEMENT -->
-            <div id="admin-controls" style="display: none; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin-top:0;">📋 Admin Control Panel: Customer Records & GPS Tracker</h4>
-                <div style="overflow-x: auto;">
-                    <table class="customer-table">
-                        <thead>
-                            <tr><th>Farm Name</th><th>Username</th><th>Phone</th><th>Last Login</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="customer-list-body"></tbody>
-                    </table>
+                <div class="card">
+                    <h4>⚙️ Pump Control</h4>
+                    <p id="val-pump" style="font-size: 22px; font-weight: bold; color: #2e7d32; margin: 5px 0;">OFF</p>
+                    <div id="pump-control-container"></div>
                 </div>
             </div>
 
-            <div style="background: white; padding: 15px; border-radius: 8px;">
-                <h4 style="margin-top: 0;" id="map-title">📍 Interactive Farm Location Tracker</h4>
-                <div id="map"></div>
+            <!-- ADMIN CONTROLS & CUSTOMER MANAGEMENT -->
+            <div id="admin-section" style="display: none;">
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-top:0;">📋 Admin Control Panel: Customer Records & GPS Tracker</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="customer-table">
+                            <thead>
+                                <tr><th>Farm Name</th><th>Username</th><th>Phone</th><th>Last Login</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="customer-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-top: 0;">📍 All Customer Farms GPS Tracker (Admin View Only)</h4>
+                    <div id="map"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -133,6 +142,20 @@
             document.getElementById('form-register').style.display = formName === 'register' ? 'block' : 'none';
             document.getElementById('form-forgot').style.display = formName === 'forgot' ? 'block' : 'none';
             document.getElementById('auth-msg').style.display = 'none';
+        }
+
+        // Automatic IP Location Fetcher to prevent sea placement
+        async function fetchIpLocation() {
+            try {
+                let res = await fetch('https://ipapi.co/json/');
+                let data = await res.json();
+                if (data && data.latitude && data.longitude) {
+                    return { lat: data.latitude, lng: data.longitude };
+                }
+            } catch (e) {
+                console.log("IP Geolocation fallback used");
+            }
+            return { lat: 10.1500, lng: 124.4800 }; // Default Ubay area fallback
         }
 
         async function registerUser() {
@@ -152,52 +175,23 @@
                 return;
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    
-                    const { error } = await _supabase.from('users').insert([{
-                        full_name: fullname,
-                        username: username,
-                        password: password,
-                        phone_number: phone,
-                        role: 'customer',
-                        latitude: lat,
-                        longitude: lng,
-                        last_login: new Date().toISOString()
-                    }]);
+            let loc = await fetchIpLocation();
 
-                    if (error) {
-                        showMsg("Registration error: " + error.message, "red");
-                    } else {
-                        alert("Registration successful!");
-                        launchDashboard(username, 'customer', fullname);
-                    }
-                }, () => {
-                    registerWithoutLocation(fullname, username, password, phone);
-                }, { timeout: 10000 });
-            } else {
-                registerWithoutLocation(fullname, username, password, phone);
-            }
-        }
-
-        async function registerWithoutLocation(fullname, username, password, phone) {
             const { error } = await _supabase.from('users').insert([{
                 full_name: fullname,
                 username: username,
                 password: password,
                 phone_number: phone,
                 role: 'customer',
-                latitude: 10.0883,  // Ubay, Bohol mainland reference
-                longitude: 124.4617,
+                latitude: loc.lat,
+                longitude: loc.lng,
                 last_login: new Date().toISOString()
             }]);
 
             if (error) {
                 showMsg("Registration error: " + error.message, "red");
             } else {
-                alert("Registration successful (Default location used)!");
+                alert("Registration successful!");
                 launchDashboard(username, 'customer', fullname);
             }
         }
@@ -224,27 +218,15 @@
                 return;
             }
 
-            // AUTOMATIC GPS TRACKING ON LOGIN
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    
-                    await _supabase.from('users').update({ 
-                        latitude: lat, 
-                        longitude: lng, 
-                        last_login: new Date().toISOString() 
-                    }).eq('username', username);
+            // Automatic IP Geolocation update on login
+            let loc = await fetchIpLocation();
+            await _supabase.from('users').update({ 
+                latitude: loc.lat, 
+                longitude: loc.lng, 
+                last_login: new Date().toISOString() 
+            }).eq('username', username);
 
-                    launchDashboard(username, user.role, user.full_name);
-                }, async () => {
-                    await _supabase.from('users').update({ last_login: new Date().toISOString() }).eq('username', username);
-                    launchDashboard(username, user.role, user.full_name);
-                }, { timeout: 8000 });
-            } else {
-                await _supabase.from('users').update({ last_login: new Date().toISOString() }).eq('username', username);
-                launchDashboard(username, user.role, user.full_name);
-            }
+            launchDashboard(username, user.role, user.full_name);
         }
 
         async function resetPassword() {
@@ -273,30 +255,33 @@
             document.getElementById('user-display').innerText = "👤 " + (fullname || username);
             document.getElementById('role-badge').innerText = role.toUpperCase();
 
-            initMap();
             loadLiveSensorData();
-            setInterval(loadLiveSensorData, 5000); // Auto-refresh every 5 seconds
+            setInterval(loadLiveSensorData, 4000); // Auto-refresh sensors every 4s
+
+            const pumpContainer = document.getElementById('pump-control-container');
 
             if (role === 'admin') {
                 document.getElementById('top-navbar').style.background = '#1565c0';
-                document.getElementById('admin-controls').style.display = 'block';
-                document.getElementById('map-title').innerText = '📍 All Customer Farms GPS Tracker';
+                document.getElementById('admin-section').style.display = 'block';
+                pumpContainer.innerHTML = `<span style="font-size:11px; color:#666;">(Admin View: Monitor Only)</span>`;
+                initMap();
                 loadAdminCustomers();
             } else {
-                document.getElementById('map-title').innerText = '📍 Your Farm Location';
-                loadCustomerMapMarker(username);
+                document.getElementById('admin-section').style.display = 'none';
+                // Customer gets control over the pump
+                pumpContainer.innerHTML = `<button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>`;
             }
         }
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.0883, 124.4617], 12);
+                map = L.map('map').setView([10.1500, 124.4800], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
             }
         }
 
         async function loadLiveSensorData() {
-            let { data, error } = await _supabase
+            let { data } = await _supabase
                 .from('sensor_data')
                 .select('*')
                 .order('id', { ascending: false })
@@ -307,24 +292,43 @@
                 document.getElementById('val-temp').innerText = (reading.temperature ?? '28.5') + ' °C';
                 document.getElementById('val-soil').innerText = (reading.soil_moisture ?? '65') + ' %';
                 document.getElementById('val-water').innerText = (reading.water_level ?? '80') + ' %';
+                
                 if(reading.pump_status !== undefined) {
-                    document.getElementById('val-pump').innerText = reading.pump_status ? 'ON' : 'OFF';
+                    const statusText = reading.pump_status ? 'ON' : 'OFF';
+                    document.getElementById('val-pump').innerText = statusText;
+                    document.getElementById('val-pump').style.color = reading.pump_status ? '#d32f2f' : '#2e7d32';
+
+                    const toggleBtn = document.getElementById('btn-toggle-pump');
+                    if (toggleBtn) {
+                        if (reading.pump_status) {
+                            toggleBtn.innerText = "TURN OFF PUMP";
+                            toggleBtn.className = "btn-pump pump-on";
+                        } else {
+                            toggleBtn.innerText = "TURN ON PUMP";
+                            toggleBtn.className = "btn-pump pump-off";
+                        }
+                    }
                 }
-            } else {
-                document.getElementById('val-temp').innerText = '28.5 °C';
-                document.getElementById('val-soil').innerText = '64 %';
-                document.getElementById('val-water').innerText = '82 %';
             }
         }
 
-        async function loadCustomerMapMarker(username) {
-            let { data } = await _supabase.from('users').select('*').eq('username', username);
+        async function togglePump() {
+            let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
+            let currentStatus = false;
             if (data && data.length > 0) {
-                let user = data[0];
-                if (user.latitude && user.longitude) {
-                    addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Smart Farm Location`);
-                }
+                currentStatus = !!data[0].pump_status;
             }
+            let newStatus = !currentStatus;
+
+            // I-update sa Supabase aron mabasa sa ESP32
+            await _supabase.from('sensor_data').insert([{
+                temperature: data && data[0] ? data[0].temperature : 28,
+                soil_moisture: data && data[0] ? data[0].soil_moisture : 60,
+                water_level: data && data[0] ? data[0].water_level : 75,
+                pump_status: newStatus
+            }]);
+
+            loadLiveSensorData();
         }
 
         async function loadAdminCustomers() {
@@ -339,7 +343,8 @@
                 users.forEach(u => {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        addMarker(u.latitude, u.longitude, `<b>${u.full_name}</b><br>Username: ${u.username}<br>Phone: ${u.phone_number || 'N/A'}<br><a href="${gmapsUrl}" target="_blank">Open in Google Maps</a>`);
+                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Username: ${u.username}<br>Phone: ${u.phone_number || 'N/A'}`);
+                        userMarkers.push(marker);
                         
                         tableBody.innerHTML += `
                             <tr>
@@ -358,12 +363,6 @@
             } else {
                 tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No registered customers found.</td></tr>`;
             }
-        }
-
-        function addMarker(lat, lng, popupText) {
-            const marker = L.marker([lat, lng]).addTo(map).bindPopup(popupText);
-            userMarkers.push(marker);
-            map.setView([lat, lng], 14);
         }
 
         async function editCustomer(username, oldName) {

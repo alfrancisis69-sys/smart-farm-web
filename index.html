@@ -41,39 +41,39 @@
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN (LOGIN / REGISTER / FORGOT) -->
+    <!-- AUTHENTICATION SCREEN -->
     <div id="auth-view" class="login-wrapper">
         <div class="login-card">
             <h2 id="auth-title" style="text-align: center; margin-top: 0;">🌱 Yahikos Smart Farm</h2>
             
             <!-- LOGIN FORM -->
             <div id="form-login">
-                <p style="font-size: 12px; color: #666; text-align: center;">I-enter ang imong credentials o Admin access.</p>
+                <p style="font-size: 12px; color: #666; text-align: center;">Enter your account credentials or admin access.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="log-username" placeholder="Enter username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="log-password" placeholder="Enter password"></div>
                 <button class="btn-submit" onclick="loginUser()">Login</button>
-                <div class="toggle-link" onclick="switchForm('register')">Wapa kay account? <span>Mag-register diri</span></div>
-                <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #d32f2f;">Nakalimot sa password? <span>I-reset</span></div>
+                <div class="toggle-link" onclick="switchForm('register')">Don't have an account? <span>Register here</span></div>
+                <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #d32f2f;">Forgot password? <span>Reset</span></div>
             </div>
 
             <!-- REGISTER FORM -->
             <div id="form-register" style="display: none;">
-                <p style="font-size: 12px; color: #666; text-align: center;">Paghimo ug bag-ong Customer Account.</p>
+                <p style="font-size: 12px; color: #666; text-align: center;">Create a new customer account.</p>
                 <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Juan Dela Cruz Farm"></div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Create username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
                 <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone" placeholder="09123456789"></div>
                 <button class="btn-submit" onclick="registerUser()">Register & Share Location</button>
-                <div class="toggle-link" onclick="switchForm('login')">Naa na kay account? <span>Login diri</span></div>
+                <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
             </div>
 
             <!-- FORGOT PASSWORD FORM -->
             <div id="form-forgot" style="display: none;">
-                <p style="font-size: 12px; color: #666; text-align: center;">I-reset ang imong password.</p>
-                <div class="form-group"><label>Username</label><input type="text" id="fog-username" placeholder="Imong username"></div>
-                <div class="form-group"><label>Bag-ong Password</label><input type="password" id="fog-newpassword" placeholder="Butangi ug bag-ong password"></div>
-                <button class="btn-submit" style="background-color: #d32f2f;" onclick="resetPassword()">I-update ang Password</button>
-                <div class="toggle-link" onclick="switchForm('login')">Balik sa <span>Login</span></div>
+                <p style="font-size: 12px; color: #666; text-align: center;">Reset your account password.</p>
+                <div class="form-group"><label>Username</label><input type="text" id="fog-username" placeholder="Enter your username"></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="fog-newpassword" placeholder="Enter new password"></div>
+                <button class="btn-submit" style="background-color: #d32f2f;" onclick="resetPassword()">Update Password</button>
+                <div class="toggle-link" onclick="switchForm('login')">Back to <span>Login</span></div>
             </div>
 
             <div id="auth-msg" class="msg-box"></div>
@@ -101,9 +101,9 @@
                 <div class="card"><h4>⚙️ Pump Status</h4><p id="val-pump" style="font-size: 24px; font-weight: bold; color: #2e7d32;">AUTO</p></div>
             </div>
 
-            <!-- ADMIN CONTROLS & CUSTOMER LIST -->
+            <!-- ADMIN CONTROLS & CUSTOMER MANAGEMENT -->
             <div id="admin-controls" style="display: none; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin-top:0;">📋 Admin Control Panel: Customer Management & GPS Redirection</h4>
+                <h4 style="margin-top:0;">📋 Admin Control Panel: Customer Records & GPS Tracker</h4>
                 <div style="overflow-x: auto;">
                     <table class="customer-table">
                         <thead>
@@ -115,7 +115,7 @@
             </div>
 
             <div style="background: white; padding: 15px; border-radius: 8px;">
-                <h4 style="margin-top: 0;">📍 Interactive Farm Location Tracker (Red Pins)</h4>
+                <h4 style="margin-top: 0;">📍 Interactive Farm Location Tracker</h4>
                 <div id="map"></div>
             </div>
         </div>
@@ -141,10 +141,17 @@
             const password = document.getElementById('reg-password').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
 
-            if (!fullname || !username || !password) { showMsg("Palihog pun-i ang tanang importanteng fields!", "red"); return; }
+            if (!fullname || !username || !password) {
+                showMsg("Please fill in all required fields.", "red");
+                return;
+            }
 
+            // Check if username already exists
             let { data: existing } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
-            if (existing) { showMsg("Ang maong username kay nagamit na. Paghimo ug lain.", "red"); return; }
+            if (existing) {
+                showMsg("Username already taken. Please choose another one.", "red");
+                return;
+            }
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -152,28 +159,52 @@
                     const lng = pos.coords.longitude;
                     
                     const { error } = await _supabase.from('users').insert([{
-                        full_name: fullname, username, password, phone_number: phone, role: 'customer', latitude: lat, longitude: lng, last_login: new Date().toISOString()
+                        full_name: fullname,
+                        username: username,
+                        password: password,
+                        phone_number: phone,
+                        role: 'customer',
+                        latitude: lat,
+                        longitude: lng,
+                        last_login: new Date().toISOString()
                     }]);
 
-                    if (error) { showMsg("Error sa pag-register: " + error.message, "red"); }
-                    else { alert("Successful ang pag-register!"); launchDashboard(username, 'customer', fullname); }
-                }, () => { showMsg("Kinahanglan i-allow ang GPS location para ma-register ang farm.", "red"); }, { timeout: 10000 });
-            } else { showMsg("Wala nagsuporta ang browser sa GPS location.", "red"); }
+                    if (error) {
+                        showMsg("Registration error: " + error.message, "red");
+                    } else {
+                        alert("Registration successful!");
+                        launchDashboard(username, 'customer', fullname);
+                    }
+                }, () => {
+                    showMsg("Geolocation permission is required to register farm location.", "red");
+                }, { timeout: 10000 });
+            } else {
+                showMsg("Geolocation is not supported by your browser.", "red");
+            }
         }
 
         async function loginUser() {
             const username = document.getElementById('log-username').value.trim();
             const password = document.getElementById('log-password').value.trim();
 
-            if (!username || !password) { showMsg("I-type ang username ug password!", "red"); return; }
+            if (!username || !password) {
+                showMsg("Please enter username and password.", "red");
+                return;
+            }
 
             let { data: user, error } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
 
-            if (error || !user) { showMsg("Wala makit-an ang maong username!", "red"); return; }
+            if (error || !user) {
+                showMsg("User account not found.", "red");
+                return;
+            }
 
-            if (user.password !== password) { showMsg("Mali ang imong password!", "red"); return; }
+            if (user.password !== password) {
+                showMsg("Incorrect password.", "red");
+                return;
+            }
 
-            // Update GPS and last login on login if available
+            // Update GPS location and last login timestamp upon successful login
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     await _supabase.from('users').update({ 
@@ -191,13 +222,19 @@
             const username = document.getElementById('fog-username').value.trim();
             const newpass = document.getElementById('fog-newpassword').value.trim();
 
-            if (!username || !newpass) { showMsg("I-fill ang username ug bag-ong password.", "red"); return; }
+            if (!username || !newpass) {
+                showMsg("Please enter username and new password.", "red");
+                return;
+            }
 
             let { data: user } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
-            if (!user) { showMsg("Wala makit-an ang username.", "red"); return; }
+            if (!user) {
+                showMsg("Username not found in records.", "red");
+                return;
+            }
 
             await _supabase.from('users').update({ password: newpass }).eq('username', username);
-            alert("Na-update na ang password! Pwede na ka mo-login.");
+            alert("Password updated successfully! You can now login.");
             switchForm('login');
         }
 
@@ -228,7 +265,7 @@
         async function loadCustomerMapMarker(username) {
             let { data: user } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
             if(user && user.latitude && user.longitude) {
-                addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Imong Location`);
+                addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Farm Location`);
             }
         }
 
@@ -237,7 +274,7 @@
             const tableBody = document.getElementById('customer-list-body');
             tableBody.innerHTML = '';
 
-            // Clear old markers
+            // Clear previous map markers
             userMarkers.forEach(m => map.removeLayer(m));
             userMarkers = [];
 
@@ -245,7 +282,7 @@
                 users.forEach(u => {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        addMarker(u.latitude, u.longitude, `<b>${u.full_name}</b><br>User: ${u.username}<br>Phone: ${u.phone_number || 'N/A'}<br><a href="${gmapsUrl}" target="_blank">Open in Google Maps</a>`);
+                        addMarker(u.latitude, u.longitude, `<b>${u.full_name}</b><br>Username: ${u.username}<br>Phone: ${u.phone_number || 'N/A'}<br><a href="${gmapsUrl}" target="_blank">Open in Google Maps</a>`);
                         
                         tableBody.innerHTML += `
                             <tr>
@@ -262,7 +299,7 @@
                     }
                 });
             } else {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">Wala pay rehistradong customer.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No registered customers found.</td></tr>`;
             }
         }
 
@@ -273,28 +310,32 @@
         }
 
         async function editCustomer(username, oldName) {
-            const newName = prompt("I-enter ang bag-ong pangalan sa Farm / Customer:", oldName);
+            const newName = prompt("Enter new Farm / Customer Name:", oldName);
             if (newName !== null && newName.trim() !== "") {
                 await _supabase.from('users').update({ full_name: newName.trim() }).eq('username', username);
-                alert("Na-update na ang pangalan!");
+                alert("Customer name updated successfully!");
                 loadAdminCustomers();
             }
         }
 
         async function deleteCustomer(username) {
-            if (confirm(`Sigurado ka ba nga gusto nimong tangtangon si customer "${username}" kay wala na siya nagagamit sa produkto?`)) {
+            if (confirm(`Are you sure you want to remove customer "${username}" from the active product list?`)) {
                 await _supabase.from('users').delete().eq('username', username);
-                alert("Natangtang na ang customer sa sistema.");
+                alert("Customer successfully removed.");
                 loadAdminCustomers();
             }
         }
 
         function showMsg(text, color) {
             const msgBox = document.getElementById('auth-msg');
-            msgBox.style.color = color; msgBox.innerText = text; msgBox.style.display = 'block';
+            msgBox.style.color = color;
+            msgBox.innerText = text;
+            msgBox.style.display = 'block';
         }
 
-        function logout() { window.location.reload(); }
+        function logout() {
+            window.location.reload();
+        }
     </script>
 </body>
 </html>

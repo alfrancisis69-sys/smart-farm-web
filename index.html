@@ -146,7 +146,6 @@
                 return;
             }
 
-            // Check if username already exists
             let { data: existing } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
             if (existing) {
                 showMsg("Username already taken. Please choose another one.", "red");
@@ -192,19 +191,28 @@
                 return;
             }
 
-            let { data: user, error } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
+            // Fixed query to support standard select array check
+            let { data, error } = await _supabase.from('users').select('*').eq('username', username);
 
-            if (error || !user) {
+            console.log("Supabase Response:", { data, error });
+
+            if (error) {
+                showMsg("Database error: " + error.message, "red");
+                return;
+            }
+
+            if (!data || data.length === 0) {
                 showMsg("User account not found.", "red");
                 return;
             }
+
+            let user = data[0];
 
             if (user.password !== password) {
                 showMsg("Incorrect password.", "red");
                 return;
             }
 
-            // Update GPS location and last login timestamp upon successful login
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     await _supabase.from('users').update({ 
@@ -227,8 +235,8 @@
                 return;
             }
 
-            let { data: user } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
-            if (!user) {
+            let { data } = await _supabase.from('users').select('*').eq('username', username);
+            if (!data || data.length === 0) {
                 showMsg("Username not found in records.", "red");
                 return;
             }
@@ -263,9 +271,12 @@
         }
 
         async function loadCustomerMapMarker(username) {
-            let { data: user } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
-            if(user && user.latitude && user.longitude) {
-                addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Farm Location`);
+            let { data } = await _supabase.from('users').select('*').eq('username', username);
+            if(data && data.length > 0) {
+                let user = data[0];
+                if(user.latitude && user.longitude) {
+                    addMarker(user.latitude, user.longitude, `<b>${user.full_name || user.username}</b><br>Your Farm Location`);
+                }
             }
         }
 
@@ -274,7 +285,6 @@
             const tableBody = document.getElementById('customer-list-body');
             tableBody.innerHTML = '';
 
-            // Clear previous map markers
             userMarkers.forEach(m => map.removeLayer(m));
             userMarkers = [];
 

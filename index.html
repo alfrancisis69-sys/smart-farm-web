@@ -123,7 +123,7 @@
 
     <script>
         const SUPABASE_URL = 'https://fqqwlvreqnxkbvbjjrol.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdMdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2Nzk2NzIsImV4cCI6MjA2MjI1NTY3Mn0.RjC0_t6tUal-G31xZ2XGk3vE37U8I-l851I1R-7V4lE';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let map, userMarkers = [];
@@ -191,7 +191,6 @@
                 return;
             }
 
-            // Fixed query to support standard select array check
             let { data, error } = await _supabase.from('users').select('*').eq('username', username);
 
             console.log("Supabase Response:", { data, error });

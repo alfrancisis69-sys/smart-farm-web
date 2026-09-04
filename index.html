@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Farm Management System - Tor Secured</title>
+    <title>Smart Farm Management System - Secure GPS</title>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Leaflet JS & CSS -->
@@ -23,8 +23,8 @@
         .toggle-link { text-align: center; margin-top: 15px; font-size: 13px; color: #aaa; cursor: pointer; }
         .toggle-link span { color: #b19cd9; font-weight: bold; text-decoration: underline; }
         
-        /* TOR STATUS BANNER */
-        .tor-banner { background: #4a154b; color: #e7e7e7; padding: 8px; font-size: 12px; text-align: center; font-weight: bold; border-bottom: 1px solid #7d35f2; }
+        /* STATUS BANNER */
+        .tor-banner { background: #1565c0; color: #e7e7e7; padding: 8px; font-size: 12px; text-align: center; font-weight: bold; border-bottom: 1px solid #7d35f2; }
 
         /* DASHBOARD */
         #dashboard-view { display: none; }
@@ -48,31 +48,31 @@
 </head>
 <body>
 
-    <div class="tor-banner">🔒 TOR / SOCKS5 Onion Routing Tunnel: <span id="tor-status-text">Checking Circuit...</span></div>
+    <div class="tor-banner">🛰️ Precise GPS Location Tracking: <span id="tor-status-text">Ready for positioning...</span></div>
 
     <!-- AUTHENTICATION SCREEN -->
     <div id="auth-view" class="login-wrapper">
         <div class="login-card">
-            <h2 style="text-align: center; margin-top: 0;">🧅 Smart Farm (Tor Node)</h2>
+            <h2 style="text-align: center; margin-top: 0;">🌱 Smart Farm Portal</h2>
             
             <!-- LOGIN FORM -->
             <div id="form-login">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Secured via Anonymized Circuit Layer.</p>
+                <p style="font-size: 12px; color: #aaa; text-align: center;">Secure Access with Live GPS Tagging.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="log-username" placeholder="Enter username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="log-password" placeholder="Enter password"></div>
-                <button class="btn-submit" onclick="loginUser()">Login via Tor</button>
+                <button class="btn-submit" onclick="loginUser()">Login with GPS Location</button>
                 <div class="toggle-link" onclick="switchForm('register')">Don't have an account? <span>Register here</span></div>
                 <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #ff6b6b;">Forgot password? <span>Reset</span></div>
             </div>
 
             <!-- REGISTER FORM -->
             <div id="form-register" style="display: none;">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Register Farm with Tor Exit Node Geolocation.</p>
-                <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Onion Farm"></div>
+                <p style="font-size: 12px; color: #aaa; text-align: center;">Register Farm with Exact Device GPS Coordinates.</p>
+                <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Farm Ubay"></div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Create username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
                 <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone" placeholder="09123456789"></div>
-                <button class="btn-submit" onclick="registerUser()">Register Farm (Tor)</button>
+                <button class="btn-submit" onclick="registerUser()">Register Farm (GPS)</button>
                 <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
             </div>
 
@@ -93,7 +93,7 @@
     <div id="dashboard-view">
         <div class="navbar" id="top-navbar">
             <div>
-                <h3 style="margin: 0; display: inline;">🧅 Yahikos Secure Tor Farm</h3>
+                <h3 style="margin: 0; display: inline;">🌱 Yahiko Smart Farm Dashboard</h3>
                 <span id="role-badge" style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 12px; margin-left: 10px;"></span>
             </div>
             <div>
@@ -132,7 +132,7 @@
                     <label>Description of Error / Problem</label>
                     <textarea id="rep-description" rows="3" placeholder="Describe unsa ang nahitabo..."></textarea>
                 </div>
-                <button class="btn-submit" onclick="submitErrorReport()">Submit Report via Tor</button>
+                <button class="btn-submit" onclick="submitErrorReport()">Submit Report</button>
             </div>
 
             <!-- ADMIN SECTION -->
@@ -150,7 +150,7 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Tor Exit GPS Tracker</h4>
+                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Exact GPS Tracker</h4>
                     <div style="overflow-x: auto;">
                         <table class="data-table">
                             <thead>
@@ -162,7 +162,7 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top: 0;">📍 Tor Exit Node & Customer GPS Map</h4>
+                    <h4 style="margin-top: 0;">📍 Exact Customer & Farm GPS Map</h4>
                     <div id="map"></div>
                 </div>
             </div>
@@ -178,34 +178,41 @@
         let currentUser = null;
         let currentRole = null;
 
-        // Susiha kung naka-Tor browser/proxy node ba ang client
-        async function checkTorStatus() {
-            const statusEl = document.getElementById('tor-status-text');
-            try {
-                // Paggamit sa ipify o onion-routing diagnostic endpoint aron masuta ang exit node IP & Location
-                let response = await fetch('https://api.ipify.org?format=json');
-                let data = await response.json();
-                
-                // Geo-lookup sa kasamtangang IP gamit ang ipapi.co
-                let geoRes = await fetch(`https://ipapi.co/${data.ip}/json/`);
-                let geoData = await geoRes.json();
+        // Function para kuhaon ang Eksaktong Lat/Lng gamit ang HTML5 Geolocation API (Bypass ISP/IP location)
+        function getExactDeviceLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser");
+                    resolve({ lat: 10.1557, lng: 124.4831 }); // Fallback to Ubay Bohol default
+                    return;
+                }
 
-                statusEl.innerHTML = `Active (Exit Node: ${geoData.city || 'Hidden'}, ${geoData.country_name || 'Anonymous'} - IP: ${data.ip})`;
-                statusEl.style.color = '#4ade80';
-                
-                return {
-                    lat: geoData.latitude || 10.1557,
-                    lng: geoData.longitude || 124.4831
-                };
-            } catch (e) {
-                statusEl.innerHTML = "Tor Network Detected / Direct ISP Masked (Fallback Mode Active)";
-                statusEl.style.color = '#f87171';
-                return { lat: 10.1557, lng: 124.4831 }; // Default fallback coordinate kung na-block ang external API check
-            }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        console.warn("GPS Location error or denied: ", error.message);
+                        alert("Palihog i-allow ang GPS/Location permission aron makuha ang eksaktong lokasyon sa imong umahan.");
+                        resolve({ lat: 10.1557, lng: 124.4831 }); // Fallback coordinate kung i-deny
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
         }
 
         window.onload = async function() {
-            await checkTorStatus();
+            const statusEl = document.getElementById('tor-status-text');
+            if (navigator.geolocation) {
+                statusEl.innerHTML = "GPS Ready. Click login/register to capture exact coordinates.";
+                statusEl.style.color = '#4ade80';
+            } else {
+                statusEl.innerHTML = "Geolocation not supported by device.";
+                statusEl.style.color = '#f87171';
+            }
         };
 
         function switchForm(formName) {
@@ -213,20 +220,6 @@
             document.getElementById('form-register').style.display = formName === 'register' ? 'block' : 'none';
             document.getElementById('form-forgot').style.display = formName === 'forgot' ? 'block' : 'none';
             document.getElementById('auth-msg').style.display = 'none';
-        }
-
-        // Kuhaon ang IP Geolocation sa Tor Exit Node imbes nga ang local device GPS sa ISP
-        async function getTorExitLocation() {
-            try {
-                let res = await fetch('https://ipapi.co/json/');
-                let data = await res.json();
-                if(data.latitude && data.longitude) {
-                    return { lat: data.latitude, lng: data.longitude };
-                }
-            } catch(err) {
-                console.warn("Tor Exit Node Geo lookup warning:", err);
-            }
-            return { lat: 10.1557, lng: 124.4831 };
         }
 
         async function registerUser() {
@@ -246,8 +239,8 @@
                 return;
             }
 
-            // Kuhaon ang Tor Exit Node coordinate aron matago ang local ISP location
-            let torLoc = await getTorExitLocation();
+            showMsg("Getting exact GPS coordinates from your device...", "#b19cd9");
+            let gpsLoc = await getExactDeviceLocation();
 
             const { error } = await _supabase.from('users').insert([{
                 full_name: fullname,
@@ -255,15 +248,15 @@
                 password: password,
                 phone_number: phone,
                 role: 'customer',
-                latitude: torLoc.lat,
-                longitude: torLoc.lng,
+                latitude: gpsLoc.lat,
+                longitude: gpsLoc.lng,
                 last_login: new Date().toISOString()
             }]);
 
             if (error) {
                 showMsg("Registration error: " + error.message, "red");
             } else {
-                alert("Registration successful via Tor network anonymity layer!");
+                alert("Registration successful with exact GPS location!");
                 launchDashboard(username, 'customer', fullname);
             }
         }
@@ -290,10 +283,12 @@
                 return;
             }
 
-            let torLoc = await getTorExitLocation();
+            showMsg("Capturing exact device GPS...", "#b19cd9");
+            let gpsLoc = await getExactDeviceLocation();
+
             await _supabase.from('users').update({ 
-                latitude: torLoc.lat, 
-                longitude: torLoc.lng, 
+                latitude: gpsLoc.lat, 
+                longitude: gpsLoc.lng, 
                 last_login: new Date().toISOString() 
             }).eq('username', username);
 
@@ -351,9 +346,9 @@
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.1557, 124.4831], 3);
+                map = L.map('map').setView([10.1557, 124.4831], 11);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: 'Tiles &copy; Esri &mdash; Tor Network Routing Layer'
+                    attribution: 'Tiles &copy; Esri &mdash; Exact GPS Tracking Layer'
                 }).addTo(map);
             }
         }
@@ -419,7 +414,7 @@
             if (error) {
                 alert("Error: " + error.message);
             } else {
-                alert("Report securely submitted via Tor network!");
+                alert("Report successfully submitted!");
                 document.getElementById('rep-description').value = '';
             }
         }
@@ -463,11 +458,13 @@
             userMarkers = [];
 
             if (users && users.length > 0) {
+                let bounds = [];
                 users.forEach(u => {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Tor Exit Node IP / Coord<br>Phone: ${u.phone_number || 'N/A'}`);
+                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Exact GPS Location<br>Phone: ${u.phone_number || 'N/A'}`);
                         userMarkers.push(marker);
+                        bounds.push([u.latitude, u.longitude]);
                         
                         tableBody.innerHTML += `
                             <tr>
@@ -483,6 +480,9 @@
                             </tr>`;
                     }
                 });
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds, { maxZoom: 14 });
+                }
             } else {
                 tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No registered customers found.</td></tr>`;
             }

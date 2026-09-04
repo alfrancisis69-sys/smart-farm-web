@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Smart Farm Management System</title>
+    <title>Smart Farm Management System</title>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Leaflet JS & CSS -->
@@ -109,10 +109,9 @@
                 </div>
             </div>
 
-            <!-- CUSTOMER REPORT SECTION (Visible to Customers) -->
+            <!-- CUSTOMER REPORT SECTION -->
             <div id="customer-report-section" class="section-box" style="display: none;">
                 <h4 style="margin-top:0; color: var(--primary);">🚨 Report Farm Error / Broken Tool to Admin</h4>
-                <p style="font-size: 12px; color: #666;">Naay guba nga sensor, depektosong wiring, o problema sa pump? Isulat diri aron mabasa sa Admin.</p>
                 <div class="form-group">
                     <label>Issue Type / Component</label>
                     <select id="rep-issue-type">
@@ -126,15 +125,15 @@
                 </div>
                 <div class="form-group">
                     <label>Description of Error / Problem</label>
-                    <textarea id="rep-description" rows="3" placeholder="Describe unsa ang nahitabo o unsay naguba..."></textarea>
+                    <textarea id="rep-description" rows="3" placeholder="Describe unsa ang nahitabo..."></textarea>
                 </div>
                 <button class="btn-submit" onclick="submitErrorReport()">Submit Report to Admin</button>
             </div>
 
-            <!-- ADMIN CONTROLS & REPORTS SECTION (Visible to Admin Only) -->
+            <!-- ADMIN SECTION -->
             <div id="admin-section" style="display: none;">
                 <div class="section-box">
-                    <h4 style="margin-top:0; color: var(--admin);">📋 Customer Reports & Bug Fixes (Admin Panel)</h4>
+                    <h4 style="margin-top:0; color: var(--admin);">📋 Customer Reports & Bug Fixes</h4>
                     <div style="overflow-x: auto;">
                         <table class="data-table">
                             <thead>
@@ -158,7 +157,7 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top: 0;">📍 All Customer Farms GPS Tracker</h4>
+                    <h4 style="margin-top: 0;">📍 Satellite Customer Farms GPS Tracker</h4>
                     <div id="map"></div>
                 </div>
             </div>
@@ -181,17 +180,28 @@
             document.getElementById('auth-msg').style.display = 'none';
         }
 
-        async function fetchIpLocation() {
-            try {
-                let res = await fetch('https://ipapi.co/json/');
-                let data = await res.json();
-                if (data && data.latitude && data.longitude) {
-                    return { lat: data.latitude, lng: data.longitude };
+        // BAG-ONG FUNCTION: Mokuha sa exact GPS location gamit ang Device/Browser Geolocation
+        function getExactGpsLocation() {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            });
+                        },
+                        (error) => {
+                            console.warn("Geolocation denied or error: ", error.message);
+                            // Fallback padulong sa Ubay, Bohol kung gi-block o walay GPS
+                            resolve({ lat: 10.1557, lng: 124.4831 });
+                        },
+                        { timeout: 10000, enableHighAccuracy: true }
+                    );
+                } else {
+                    resolve({ lat: 10.1557, lng: 124.4831 });
                 }
-            } catch (e) {
-                console.log("IP Geolocation fallback");
-            }
-            return { lat: 10.1055, lng: 124.4850 }; // Ubay, Bohol area
+            });
         }
 
         async function registerUser() {
@@ -211,7 +221,8 @@
                 return;
             }
 
-            let loc = await fetchIpLocation();
+            // Kuhaon ang exact GPS location sa device sa nagrehistro
+            let loc = await getExactGpsLocation();
 
             const { error } = await _supabase.from('users').insert([{
                 full_name: fullname,
@@ -227,7 +238,7 @@
             if (error) {
                 showMsg("Registration error: " + error.message, "red");
             } else {
-                alert("Registration successful!");
+                alert("Registration successful with your exact location!");
                 launchDashboard(username, 'customer', fullname);
             }
         }
@@ -254,7 +265,8 @@
                 return;
             }
 
-            let loc = await fetchIpLocation();
+            // Kuhaon ang exact GPS location matag log-in aron ma-update sa database kung asa sila dapit
+            let loc = await getExactGpsLocation();
             await _supabase.from('users').update({ 
                 latitude: loc.lat, 
                 longitude: loc.lng, 
@@ -315,18 +327,18 @@
 
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.1055, 124.4850], 12);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+                // Gi-sentro sa Ubay, Bohol daan ang mapa
+                map = L.map('map').setView([10.1557, 124.4831], 13);
+                
+                // Ginamit ang Esri World Imagery para mahimong Satellite View ang background sa mapa
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                }).addTo(map);
             }
         }
 
         async function loadLiveSensorData() {
-            let { data } = await _supabase
-                .from('sensor_data')
-                .select('*')
-                .order('id', { ascending: false })
-                .limit(1);
-
+            let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             if (data && data.length > 0) {
                 let reading = data[0];
                 document.getElementById('val-temp').innerText = (reading.temperature ?? '28.5') + ' °C';
@@ -340,13 +352,8 @@
 
                     const toggleBtn = document.getElementById('btn-toggle-pump');
                     if (toggleBtn) {
-                        if (isPumpOn) {
-                            toggleBtn.innerText = "TURN OFF PUMP";
-                            toggleBtn.className = "btn-pump pump-on";
-                        } else {
-                            toggleBtn.innerText = "TURN ON PUMP";
-                            toggleBtn.className = "btn-pump pump-off";
-                        }
+                        toggleBtn.innerText = isPumpOn ? "TURN OFF PUMP" : "TURN ON PUMP";
+                        toggleBtn.className = isPumpOn ? "btn-pump pump-on" : "btn-pump pump-off";
                     }
                 }
             }
@@ -354,15 +361,12 @@
 
         async function togglePump() {
             let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
-            let currentStatus = false;
-            if (data && data.length > 0) {
-                currentStatus = !!data[0].pump_status;
-            }
+            let currentStatus = data && data.length > 0 ? !!data[0].pump_status : false;
             let newStatus = !currentStatus;
 
             let { error } = await _supabase.from('sensor_data').insert([{
                 temperature: data && data[0] ? data[0].temperature : 28.5,
-                humidity: data && data[0] ? data[0].humidity : 50, /* Gidugang kini nga linya aron motakdo sa imong schema ug malikayan ang error */
+                humidity: data && data[0] ? data[0].humidity : 50,
                 soil_moisture: data && data[0] ? data[0].soil_moisture : 65,
                 water_level: data && data[0] ? data[0].water_level : 80,
                 pump_status: newStatus
@@ -384,7 +388,6 @@
                 return;
             }
 
-            // Note: Siguraduha nga nakamake ka og table sa Supabase nga ginganlan og 'farm_reports' nga naay columns: customer_name, issue_type, description, created_at
             let { error } = await _supabase.from('farm_reports').insert([{
                 customer_name: currentUser,
                 issue_type: issueType,
@@ -393,8 +396,7 @@
             }]);
 
             if (error) {
-                // Kung wala pa na-create ang table, i-alert ang instructions
-                alert("Database Note: Please create a table named 'farm_reports' in Supabase with columns: customer_name, issue_type, description, created_at.\n\nError: " + error.message);
+                alert("Error: " + error.message);
             } else {
                 alert("Report successfully sent to Admin!");
                 document.getElementById('rep-description').value = '';
@@ -407,7 +409,7 @@
             tableBody.innerHTML = '';
 
             if (error || !reports || reports.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No bug or error reports from customers yet. (Make sure 'farm_reports' table exists in Supabase)</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No bug or error reports from customers yet.</td></tr>`;
                 return;
             }
 

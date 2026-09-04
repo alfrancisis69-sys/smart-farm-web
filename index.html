@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart-Farm Management  </title>
+    <title>Smart-Farm Management</title>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Leaflet JS & CSS -->
@@ -22,9 +22,6 @@
         .msg-box { margin-top: 10px; font-size: 13px; text-align: center; display: none; }
         .toggle-link { text-align: center; margin-top: 15px; font-size: 13px; color: #aaa; cursor: pointer; }
         .toggle-link span { color: #b19cd9; font-weight: bold; text-decoration: underline; }
-        
-        /* TOR BANNER */
-        .tor-banner { background: #4a154b; color: #e7e7e7; padding: 8px; font-size: 12px; text-align: center; font-weight: bold; border-bottom: 1px solid #7d35f2; }
 
         /* DASHBOARD */
         #dashboard-view { display: none; }
@@ -48,37 +45,35 @@
 </head>
 <body>
 
-    <div class="tor-banner">🧅 your location now : <span id="tor-status-text">Active (Exit Node:  Philippines - IP: 131.226.109.165)</span></div>
-
     <!-- AUTHENTICATION SCREEN -->
     <div id="auth-view" class="login-wrapper">
         <div class="login-card">
-            <h2 style="text-align: center; margin-top: 0;">🧅 Smart Farm Management</h2>
+            <h2 style="text-align: center; margin-top: 0;">🌱 Smart-Farm Login</h2>
             
             <!-- LOGIN FORM -->
             <div id="form-login">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Secure Login via Onion Routing & ISP Exit Node.</p>
+                <p style="font-size: 12px; color: #aaa; text-align: center;">Secure Farm Management Portal.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="log-username" placeholder="Enter username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="log-password" placeholder="Enter password"></div>
-                <button class="btn-submit" onclick="loginUser()">Login via Tor Network</button>
+                <button class="btn-submit" onclick="loginUser()">Login</button>
                 <div class="toggle-link" onclick="switchForm('register')">Don't have an account? <span>Register here</span></div>
                 <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #ff6b6b;">Forgot password? <span>Reset</span></div>
             </div>
 
             <!-- REGISTER FORM -->
             <div id="form-register" style="display: none;">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Register Farm via Encrypted Tor Tunnel.</p>
+                <p style="font-size: 12px; color: #aaa; text-align: center;">Register New Farm Account.</p>
                 <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Farm Ubay"></div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Create username"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
                 <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone" placeholder="09123456789"></div>
-                <button class="btn-submit" onclick="registerUser()">Register via Tor</button>
+                <button class="btn-submit" onclick="registerUser()">Register Farm</button>
                 <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
             </div>
 
             <!-- FORGOT PASSWORD FORM -->
             <div id="form-forgot" style="display: none;">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Reset your account password securely.</p>
+                <p style="font-size: 12px; color: #aaa; text-align: center;">Reset your account password.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="fog-username" placeholder="Enter your username"></div>
                 <div class="form-group"><label>New Password</label><input type="password" id="fog-newpassword" placeholder="Enter new password"></div>
                 <button class="btn-submit" style="background-color: #d32f2f;" onclick="resetPassword()">Update Password</button>
@@ -93,7 +88,7 @@
     <div id="dashboard-view">
         <div class="navbar" id="top-navbar">
             <div>
-                <h3 style="margin: 0; display: inline;">🧅 Smart Farm</h3>
+                <h3 style="margin: 0; display: inline;">🌱 Smart-Farm Management</h3>
                 <span id="role-badge" style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 12px; margin-left: 10px;"></span>
             </div>
             <div>
@@ -150,11 +145,11 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Tor Exit Node Routing</h4>
+                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Locations</h4>
                     <div style="overflow-x: auto;">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Farm Name</th><th>Username</th><th>Tor Exit IP</th><th>ISP Location</th><th>Actions</th></tr>
+                                <tr><th>Farm Name</th><th>Username</th><th>IP Address</th><th>Location</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="customer-list-body"></tbody>
                         </table>
@@ -162,7 +157,7 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top: 0;">🗺️ Tor Routing & Exit Node Map Marker</h4>
+                    <h4 style="margin-top: 0;">🗺️ Farm Locations Map</h4>
                     <div id="map"></div>
                 </div>
             </div>
@@ -178,8 +173,7 @@
         let currentUser = null;
         let currentRole = null;
 
-        // Function para makuha ang IP ug ISP location (Tor Exit Node / IP Geolocation) imbis nga diretsong laptop address
-        async function getTorRoutingLocation() {
+        async function getLocation() {
             try {
                 let response = await fetch('https://ipapi.co/json/');
                 let data = await response.json();
@@ -187,36 +181,24 @@
                     return {
                         lat: data.latitude,
                         lng: data.longitude,
-                        ip: data.ip || '131.226.109.165',
-                        city: data.city || 'Buga',
+                        ip: data.ip || '192.168.1.50',
+                        city: data.city || 'Ubay',
                         region: data.region || 'Bohol / Philippines',
-                        org: data.org || 'Tor Exit Relay / ISP'
+                        org: data.org || 'Local ISP'
                     };
                 }
             } catch (e) {
-                console.warn("Tor routing lookup fallback used:", e);
+                console.warn("Location lookup fallback used:", e);
             }
-            // Fallback coordinate kung naa may block sa network
             return {
                 lat: 10.1557,
                 lng: 124.4831,
-                ip: '131.226.109.165',
-                city: 'Buga',
-                region: 'Ubay, Bohol',
-                org: 'Tor SOCKS5 Proxy'
+                ip: '192.168.1.50',
+                city: 'Ubay',
+                region: 'Bohol, Philippines',
+                org: 'Local Network'
             };
         }
-
-        window.onload = async function() {
-            const statusEl = document.getElementById('tor-status-text');
-            try {
-                let netInfo = await getTorRoutingLocation();
-                statusEl.innerHTML = `Active (Exit Node: ${netInfo.city}, ${netInfo.region} - IP: ${netInfo.ip})`;
-                statusEl.style.color = '#4ade80';
-            } catch(err) {
-                statusEl.innerHTML = "Active (Tor Tunnel Connected)";
-            }
-        };
 
         function switchForm(formName) {
             document.getElementById('form-login').style.display = formName === 'login' ? 'block' : 'none';
@@ -242,8 +224,7 @@
                 return;
             }
 
-            showMsg("Routing through Tor SOCKS5 and fetching ISP Exit Node...", "#b19cd9");
-            let netRoute = await getTorRoutingLocation();
+            let netRoute = await getLocation();
 
             const { error } = await _supabase.from('users').insert([{
                 full_name: fullname,
@@ -259,7 +240,7 @@
             if (error) {
                 showMsg("Registration error: " + error.message, "red");
             } else {
-                alert("Registration successful via Tor Routing Network!");
+                alert("Registration successful!");
                 launchDashboard(username, 'customer', fullname);
             }
         }
@@ -286,8 +267,7 @@
                 return;
             }
 
-            showMsg("Establishing Tor circuit and routing IP...", "#b19cd9");
-            let netRoute = await getTorRoutingLocation();
+            let netRoute = await getLocation();
 
             await _supabase.from('users').update({ 
                 latitude: netRoute.lat, 
@@ -351,7 +331,7 @@
             if (!map) {
                 map = L.map('map').setView([10.1557, 124.4831], 11);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: 'Tiles &copy; Esri &mdash; Tor Exit Node Routing Layer'
+                    attribution: 'Tiles &copy; Esri &mdash; Smart-Farm Mapping Layer'
                 }).addTo(map);
             }
         }
@@ -465,7 +445,7 @@
                 users.forEach(u => {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Tor Exit Node IP Route<br>Phone: ${u.phone_number || 'N/A'}`);
+                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Farm Location<br>Phone: ${u.phone_number || 'N/A'}`);
                         userMarkers.push(marker);
                         bounds.push([u.latitude, u.longitude]);
                         
@@ -473,8 +453,8 @@
                             <tr>
                                 <td><b>${u.full_name || 'N/A'}</b></td>
                                 <td>${u.username}</td>
-                                <td>131.226.109.165</td>
-                                <td>Buga, Philippines (Tor Relay)</td>
+                                <td>192.168.1.50</td>
+                                <td>Ubay, Bohol</td>
                                 <td>
                                     <a href="${gmapsUrl}" target="_blank" class="btn-gmaps">🗺️ Maps</a>
                                     <button class="btn-action btn-edit" onclick="editCustomer('${u.username}', '${u.full_name || ''}')">Edit</button>

@@ -38,7 +38,7 @@
             padding: 20px; 
             max-width: 900px; 
             margin: auto; 
-            padding-bottom: 100px; /* Space for sticky music player */
+            padding-bottom: 100px; 
         }
 
         .grid-cards { 
@@ -170,7 +170,7 @@
             position: fixed;
             bottom: 15px;
             right: 15px;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             border: 1px solid #4ade80;
             padding: 10px 18px;
             border-radius: 30px;
@@ -196,7 +196,7 @@
             background: #2e7d32;
             color: white;
             border: none;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
             font-size: 12px;
@@ -279,11 +279,13 @@
     <!-- BACKGROUND MUSIC PLAYER -->
     <div class="music-player-bar">
         <div class="music-info">
-            🎵 <strong>Multo</strong>
-            <span>Cup of Joe</span>
+            🎵 <strong>La De Cadanse</strong>
+            <span>80s Radio Drama Nostalgia</span>
         </div>
         <button id="btn-play-music" class="btn-music" onclick="toggleAudio()">▶ Play</button>
-        <audio id="bg-audio" loop src="https://files.catbox.moe/9v9r3l.mp3"></audio>
+        <audio id="bg-audio" loop preload="auto">
+            <source src="https://ia800908.us.archive.org/21/items/LaDecadanseRadioDramaTheme/La%20Decadanse%20%28Radio%20Drama%20Theme%29.mp3" type="audio/mpeg">
+        </audio>
     </div>
 
     <script>
@@ -291,33 +293,25 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Music Player Toggle
+        // Music Player Controls
         const audio = document.getElementById('bg-audio');
         const playBtn = document.getElementById('btn-play-music');
 
         function toggleAudio() {
             if (audio.paused) {
-                audio.play();
-                playBtn.innerText = "⏸ Pause";
-                playBtn.style.background = "#d32f2f";
+                audio.play().then(() => {
+                    playBtn.innerText = "⏸ Pause";
+                    playBtn.style.background = "#d32f2f";
+                }).catch((err) => {
+                    console.error("Playback error:", err);
+                    alert("Could not load music. Please check your internet connection.");
+                });
             } else {
                 audio.pause();
                 playBtn.innerText = "▶ Play";
                 playBtn.style.background = "#2e7d32";
             }
         }
-
-        // Try playing audio automatically on user click anywhere
-        document.body.addEventListener('click', function() {
-            if (audio.paused && playBtn.innerText === "▶ Play") {
-                audio.play().then(() => {
-                    playBtn.innerText = "⏸ Pause";
-                    playBtn.style.background = "#d32f2f";
-                }).catch(() => {
-                    // Autoplay blocked by browser policy
-                });
-            }
-        }, { once: true });
 
         // Fetch Live Data continuously every 3 seconds
         async function loadLiveSensorData() {

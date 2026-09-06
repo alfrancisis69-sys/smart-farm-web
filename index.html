@@ -3,426 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4K Smart Farm Control Center</title>
+    <title>3D Futuristic Smart Farm Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome Vector Icons (Para sa Official Facebook Logo) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary-glow: #22c55e;
-            --accent-cyan: #06b6d4;
-            --accent-blue: #3b82f6;
-            --danger: #ef4444;
-            --bg-dark: #0a0f0d; 
-            --card-glass: rgba(18, 28, 22, 0.65); 
-            --card-border: rgba(34, 197, 94, 0.2); 
-            --text-main: #f8fafc; 
+        :root {
+            --bg-dark: #080b10;
+            --panel-bg: #0d131d;
+            --card-surface: #121926;
+            --border-glow: #1e293b;
+            --accent-teal: #06b6d4;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --text-main: #f1f5f9;
+            --text-sub: #64748b;
         }
-        
+
         * {
             box-sizing: border-box;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
-        body { 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-            background: linear-gradient(rgba(10, 15, 13, 0.85), rgba(10, 15, 13, 0.92)), 
-                        url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=3840&q=100') no-repeat center center fixed;
-            background-size: cover;
-            color: var(--text-main); 
-            margin: 0; 
-            padding: 0; 
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .navbar { 
-            background: rgba(10, 20, 14, 0.8); 
-            border-bottom: 1px solid var(--card-border);
-            padding: 24px 40px; 
+        /* 3D OUTER CONTAINER FRAME */
+        .dashboard-frame {
+            background: linear-gradient(145deg, #0e1626, #05080e);
+            border: 2px solid #1e293b;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 1400px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.8),
+                inset 0 1px 1px rgba(255,255,255,0.1),
+                0 0 40px rgba(6, 182, 212, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* HEADER SECTION */
+        .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(12px);
+            background: var(--panel-bg);
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-glow);
         }
 
-        .navbar h2 {
+        .dashboard-header h2 {
             margin: 0;
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            font-size: 22px;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 800;
         }
 
         .status-badge {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #4ade80;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+            font-size: 13px;
+            font-weight: 600;
         }
 
         .status-dot {
-            height: 8px;
             width: 8px;
-            background-color: #22c55e;
+            height: 8px;
+            background: var(--accent-green);
             border-radius: 50%;
-            box-shadow: 0 0 10px #22c55e;
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--accent-green);
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
+        /* GRID LAYOUT */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
         }
 
-        .main-content { 
-            padding: 40px; 
-            max-width: 1600px; 
-            margin: auto; 
-            width: 100%;
-        }
-
-        .grid-cards { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-            gap: 30px; 
-            margin-top: 20px; 
-        }
-
-        .card { 
-            background: var(--card-glass); 
-            padding: 30px; 
-            border-radius: 24px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
-            border: 1px solid var(--card-border); 
-            text-align: center; 
-            backdrop-filter: blur(16px);
+        .card {
+            background: var(--card-surface);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 20px;
             position: relative;
-            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(34, 197, 94, 0.5);
-            box-shadow: 0 25px 50px rgba(34, 197, 94, 0.15);
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 12px 25px rgba(6, 182, 212, 0.15);
         }
 
-        .card h4 { 
-            margin: 0 0 20px 0; 
-            color: #94a3b8; 
-            font-size: 15px; 
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-sub);
+            font-size: 12px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* CIRCULAR RADIAL GAUGE STYLES */
-        .gauge-container {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            margin: 0 auto;
-        }
-
-        .gauge-svg {
-            transform: rotate(-90deg);
-            width: 180px;
-            height: 180px;
-        }
-
-        .gauge-bg {
-            fill: none;
-            stroke: rgba(255, 255, 255, 0.05);
-            stroke-width: 12;
-        }
-
-        .gauge-progress {
-            fill: none;
-            stroke-width: 12;
-            stroke-linecap: round;
-            stroke-dasharray: 440;
-            stroke-dashoffset: 440;
-            transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease;
-        }
-
-        .gauge-value {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .card-value {
             font-size: 32px;
             font-weight: 800;
+            margin: 15px 0 5px 0;
             color: #fff;
         }
 
-        .gauge-unit {
-            font-size: 16px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .btn-pump { 
-            width: 100%; 
-            padding: 18px; 
-            border: none; 
-            border-radius: 14px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            color: white; 
-            font-size: 15px; 
-            letter-spacing: 1px;
-            transition: 0.3s; 
-            margin-top: 25px; 
-            text-transform: uppercase;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .pump-on { 
-            background: linear-gradient(135deg, #ef4444, #dc2626); 
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
-        }
-        .pump-off { 
-            background: linear-gradient(135deg, #22c55e, #16a34a); 
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3);
-        }
-
-        .pump-on:hover { transform: scale(1.02); }
-        .pump-off:hover { transform: scale(1.02); }
-
-        /* SUPPORT SECTION */
-        .support-card {
-            background: var(--card-glass);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 35px;
-            margin-top: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            backdrop-filter: blur(16px);
-        }
-
-        .support-header {
-            color: #38bdf8;
-            margin-top: 0;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .contact-box {
-            background: rgba(15, 23, 42, 0.6);
-            padding: 20px;
-            border-radius: 16px;
-            border-left: 4px solid #38bdf8;
-        }
-
-        .contact-box h5 {
-            margin: 0 0 8px 0;
-            color: #64748b;
+        .card-subtext {
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: var(--accent-teal);
         }
 
-        .contact-box p {
-            margin: 0;
-            font-weight: 700;
-            font-size: 15px;
-            color: #f8fafc;
-        }
-
-        .contact-box a {
-            color: #4ade80;
-            text-decoration: none;
-        }
-
-        .report-guide {
-            background: rgba(147, 51, 234, 0.1);
-            border-left: 4px solid #a855f7;
-            padding: 20px;
+        /* CENTER VISUALIZATION WAVE */
+        .visualizer-card {
+            grid-column: span 4;
+            background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
+            border: 1px solid var(--border-glow);
             border-radius: 16px;
-            margin-top: 25px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .wave-svg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 160px;
+            pointer-events: none;
+        }
+
+        /* PUMP BUTTON */
+        .btn-pump {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        .pump-off {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .pump-on {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* LOWER SUPPORT AND CONTROL SECTION */
+        .lower-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .support-panel {
+            background: var(--card-surface);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .support-panel h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: var(--accent-teal);
+        }
+
+        .contact-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .contact-item {
+            background: #090d16;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-teal);
+            flex: 1;
+        }
+
+        .contact-item.fb-box {
+            border-left-color: #1877f2;
+        }
+
+        .contact-item span {
+            display: block;
+            color: var(--text-sub);
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .fb-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #1877f2;
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .fb-link:hover {
+            color: #4292f8;
+            transform: translateX(3px);
+        }
+
+        /* BUILT-IN MUSIC PLAYER */
+        .music-panel {
+            background: var(--card-surface);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .music-panel h4 {
+            margin: 0 0 10px 0;
             font-size: 14px;
-            color: #e9d5ff;
-            line-height: 1.6;
+            color: var(--accent-purple);
         }
 
-        .report-guide ul {
-            margin: 10px 0 0 0;
-            padding-left: 20px;
-        }
-
-        /* FLOATING MUSIC PLAYER */
-        .music-player-bar {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            padding: 12px 24px;
-            border-radius: 40px;
+        .audio-controls {
             display: flex;
             align-items: center;
-            gap: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            z-index: 1000;
-            backdrop-filter: blur(12px);
+            gap: 12px;
         }
 
-        .music-info {
-            font-size: 13px;
-            color: #f8fafc;
-        }
-
-        .music-info strong {
-            color: #38bdf8;
-            display: block;
-        }
-
-        .btn-music {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            color: white;
+        .btn-play {
+            background: var(--accent-purple);
+            color: #fff;
             border: none;
             padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 13px;
+            border-radius: 8px;
             font-weight: 700;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            cursor: pointer;
+            width: 100%;
         }
 
-        .btn-music:hover {
-            transform: scale(1.05);
+        .btn-play:hover {
+            background: #7c3aed;
+        }
+
+        @media (max-width: 900px) {
+            .grid-container { grid-template-columns: repeat(2, 1fr); }
+            .visualizer-card { grid-column: span 2; }
+            .lower-grid { grid-template-columns: 1fr; }
+            .contact-row { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <h2>🌱 Smart Farm Control Center</h2>
-        <div class="status-badge">
-            <span class="status-dot"></span> Real-time Telemetry Connected
+    <div class="dashboard-frame">
+        <!-- HEADER -->
+        <div class="dashboard-header">
+            <h2>SMART FARM TELEMETRY MATRIX</h2>
+            <div class="status-badge">
+                <span class="status-dot"></span> LIVE SYSTEM ACTIVE
+            </div>
         </div>
-    </div>
 
-    <div class="main-content">
-        <!-- SENSOR & PUMP DASHBOARD WITH RADIAL GAUGES -->
-        <div class="grid-cards">
-            
-            <!-- Temperature Gauge -->
+        <!-- SENSOR METRICS -->
+        <div class="grid-container">
             <div class="card">
-                <h4>🌡️ Temperature</h4>
-                <div class="gauge-container">
-                    <svg class="gauge-svg">
-                        <circle class="gauge-bg" cx="90" cy="90" r="70"></circle>
-                        <circle class="gauge-progress" id="circle-temp" cx="90" cy="90" r="70" stroke="#f97316"></circle>
-                    </svg>
-                    <div class="gauge-value">
-                        <span id="val-temp">--</span><span class="gauge-unit">°C</span>
+                <div class="card-header">
+                    <span>Temperature</span>
+                    <span>🌡️</span>
+                </div>
+                <div class="card-value" id="val-temp">28.5 °C</div>
+                <div class="card-subtext">Optimal Thermal Range</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>Soil Moisture</span>
+                    <span>💧</span>
+                </div>
+                <div class="card-value" id="val-soil">65 %</div>
+                <div class="card-subtext">Adequate Hydration</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>Water Tank</span>
+                    <span>🚰</span>
+                </div>
+                <div class="card-value" id="val-water">80 %</div>
+                <div class="card-subtext">Capacitive Level Normal</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>Water Pump</span>
+                    <span>⚙️</span>
+                </div>
+                <div class="card-value" id="val-pump" style="color: var(--accent-green);">OFF</div>
+                <button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">Turn On Pump</button>
+            </div>
+
+            <!-- 3D MOUNTAIN WAVE VISUALIZER LAYER -->
+            <div class="visualizer-card">
+                <div style="display: flex; justify-content: space-between; position: relative; z-index: 2;">
+                    <span style="font-weight: 700; color: var(--accent-teal); font-size: 14px;">ANALYTICAL TOPOGRAPHY & WAVE MATRIX</span>
+                    <span style="color: var(--text-sub); font-size: 12px;">Realtime Data Stream</span>
+                </div>
+
+                <svg class="wave-svg" viewBox="0 0 1200 160" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.7"/>
+                            <stop offset="50%" stop-color="#8b5cf6" stop-opacity="0.8"/>
+                            <stop offset="100%" stop-color="#ec4899" stop-opacity="0.6"/>
+                        </linearGradient>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="#080b10" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+                    
+                    <path d="M0,120 Q150,40 300,90 T600,60 T900,100 T1200,40 L1200,160 L0,160 Z" fill="url(#grad2)" />
+                    <path d="M0,100 C150,20 250,130 400,50 C550,120 700,10 850,80 C1000,30 1100,110 1200,60" fill="none" stroke="url(#grad1)" stroke-width="4" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- LOWER SECTION: SUPPORT & IN-APP MUSIC PLAYER -->
+        <div class="lower-grid">
+            <div class="support-panel">
+                <h3>🛠️ Technical Operations & Field Support</h3>
+                <div class="contact-row">
+                    <div class="contact-item">
+                        <span>Direct Call/SMS</span>
+                        <strong>09855094913</strong>
+                    </div>
+                    <div class="contact-item">
+                        <span>Email Channel</span>
+                        <strong>alfrancisis69@gmail.com</strong>
+                    </div>
+                    <!-- OFFICIAL FACEBOOK LINK WITH ORIGINAL LOGO -->
+                    <div class="contact-item fb-box">
+                        <span>Facebook Support</span>
+                        <a href="https://www.facebook.com/alfrancis.sastrillas/" target="_blank" class="fb-link">
+                            <i class="fa-brands fa-facebook fa-lg"></i> Alfrancis Sastrillas
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Soil Moisture Gauge -->
-            <div class="card">
-                <h4>💧 Soil Moisture</h4>
-                <div class="gauge-container">
-                    <svg class="gauge-svg">
-                        <circle class="gauge-bg" cx="90" cy="90" r="70"></circle>
-                        <circle class="gauge-progress" id="circle-soil" cx="90" cy="90" r="70" stroke="#3b82f6"></circle>
-                    </svg>
-                    <div class="gauge-value">
-                        <span id="val-soil">--</span><span class="gauge-unit">%</span>
-                    </div>
+            <!-- IN-PAGE MUSIC PLAYER -->
+            <div class="music-panel">
+                <h4>🎵 Embedded Audio System</h4>
+                <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">
+                    La De Cadanse - 80s Drama Theme
                 </div>
-            </div>
-
-            <!-- Water Tank Level Gauge -->
-            <div class="card">
-                <h4>🚰 Water Tank Level</h4>
-                <div class="gauge-container">
-                    <svg class="gauge-svg">
-                        <circle class="gauge-bg" cx="90" cy="90" r="70"></circle>
-                        <circle class="gauge-progress" id="circle-water" cx="90" cy="90" r="70" stroke="#06b6d4"></circle>
-                    </svg>
-                    <div class="gauge-value">
-                        <span id="val-water">--</span><span class="gauge-unit">%</span>
-                    </div>
+                <div class="audio-controls">
+                    <button id="btn-play-music" class="btn-play" onclick="toggleAudio()">▶ Play Audio Stream</button>
                 </div>
-            </div>
-
-            <!-- Water Pump Control -->
-            <div class="card">
-                <h4>⚙️ Water Pump Status</h4>
-                <div class="gauge-container">
-                    <svg class="gauge-svg">
-                        <circle class="gauge-bg" cx="90" cy="90" r="70"></circle>
-                        <circle class="gauge-progress" id="circle-pump" cx="90" cy="90" r="70" stroke="#22c55e"></circle>
-                    </svg>
-                    <div class="gauge-value" id="val-pump" style="color: #22c55e;">
-                        OFF
-                    </div>
-                </div>
-                <button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>
-            </div>
-
-        </div>
-
-        <!-- TECHNICAL SUPPORT & REPORTING SECTION -->
-        <div class="support-card">
-            <h3 class="support-header">🛠️ Technical Support & Maintenance Assistance</h3>
-            <p style="font-size: 14px; color: #94a3b8; margin-bottom: 20px;">
-                Are you experiencing hardware, sensor, or pump control anomalies? Contact our Technical Operations Team immediately:
-            </p>
-
-            <div class="contact-grid">
-                <div class="contact-box">
-                    <h5>📞 Call / SMS Support</h5>
-                    <p>09855094913</p>
-                </div>
-                <div class="contact-box">
-                    <h5>✉️ Official Email</h5>
-                    <p>alfrancisis69@gmail.com</p>
-                </div>
-                <div class="contact-box">
-                    <h5>🌐 Facebook Support Profile</h5>
-                    <p><a href="https://www.facebook.com/alfrancis.sastrillas" target="_blank">Alfrancis Sastrillas</a></p>
-                </div>
-            </div>
-
-            <div class="report-guide">
-                <strong>📋 Information required when submitting a fault report:</strong>
-                <ul>
-                    <li><strong>Specific Issue:</strong> (e.g., Irrigation pump timeout, sensor telemetry drop, connectivity loss).</li>
-                    <li><strong>Control Box Diagnostics:</strong> Confirm state of Power and Wi-Fi status LEDs.</li>
-                    <li><strong>Incident Time:</strong> Timestamp of system malfunction or power anomaly.</li>
-                    <li><strong>Deployment Site:</strong> Exact farm sector for technical dispatch or hardware replacement.</li>
-                </ul>
+                <audio id="bg-audio" loop src="https://actions.google.com/sounds/v1/ambiences/outdoor_rain.ogg"></audio>
             </div>
         </div>
-    </div>
-
-    <!-- BACKGROUND MUSIC PLAYER -->
-    <div class="music-player-bar">
-        <div class="music-info">
-            🎵 <strong>La De Cadanse</strong>
-            <span>80s Radio Drama Nostalgia</span>
-        </div>
-        <button id="btn-play-music" class="btn-music" onclick="toggleAudio()">▶ Play</button>
-        <audio id="bg-audio" loop crossorigin="anonymous" src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg"></audio>
     </div>
 
     <script>
@@ -430,81 +418,55 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Circular Gauge Animation Handler (Circumference ~ 440)
-        function setGaugeValue(circleId, percent) {
-            const circle = document.getElementById(circleId);
-            const circumference = 440;
-            const clamped = Math.min(Math.max(percent, 0), 100);
-            const offset = circumference - (clamped / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
-        }
-
-        // Music Player Controls
+        // SAFE IN-PAGE AUDIO PLAYER
         const audio = document.getElementById('bg-audio');
         const playBtn = document.getElementById('btn-play-music');
 
         function toggleAudio() {
             if (audio.paused) {
                 audio.play().then(() => {
-                    playBtn.innerText = "⏸ Pause";
-                    playBtn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                    playBtn.innerText = "⏸ Pause Audio";
+                    playBtn.style.background = "#ec4899";
                 }).catch((err) => {
-                    console.error("Audio error:", err);
-                    window.open('https://www.youtube.com/results?search_query=La+De+Cadanse+80s+Philippine+Radio+Drama', '_blank');
+                    console.log("Audio playback:", err);
                 });
             } else {
                 audio.pause();
-                playBtn.innerText = "▶ Play";
-                playBtn.style.background = "linear-gradient(135deg, #0284c7, #0369a1)";
+                playBtn.innerText = "▶ Play Audio Stream";
+                playBtn.style.background = "#8b5cf6";
             }
         }
 
-        // Fetch Live Data continuously every 3 seconds
+        // Fetch Live Sensor Data
         async function loadLiveSensorData() {
             let { data, error } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             
             if (error) {
-                console.error("Error fetching sensor data:", error);
+                console.error("Error fetching telemetry:", error);
                 return;
             }
 
             if (data && data.length > 0) {
                 let reading = data[0];
+                document.getElementById('val-temp').innerText = (reading.temperature ?? '28.5') + ' °C';
+                document.getElementById('val-soil').innerText = (reading.soil_moisture ?? '65') + ' %';
+                document.getElementById('val-water').innerText = (reading.water_level ?? '80') + ' %';
                 
-                // Temp setup (0°C to 50°C scale)
-                const tempVal = reading.temperature ?? 28.5;
-                document.getElementById('val-temp').innerText = tempVal;
-                setGaugeValue('circle-temp', (tempVal / 50) * 100);
-
-                // Soil Moisture (0% to 100%)
-                const soilVal = reading.soil_moisture ?? 65;
-                document.getElementById('val-soil').innerText = soilVal;
-                setGaugeValue('circle-soil', soilVal);
-
-                // Water Level (0% to 100%)
-                const waterVal = reading.water_level ?? 80;
-                document.getElementById('val-water').innerText = waterVal;
-                setGaugeValue('circle-water', waterVal);
-
-                // Pump Status
                 if (reading.pump_status !== undefined) {
                     const isPumpOn = !!reading.pump_status;
                     const pumpVal = document.getElementById('val-pump');
                     const toggleBtn = document.getElementById('btn-toggle-pump');
 
                     pumpVal.innerText = isPumpOn ? 'ON' : 'OFF';
-                    pumpVal.style.color = isPumpOn ? '#ef4444' : '#22c55e';
-                    
-                    document.getElementById('circle-pump').style.stroke = isPumpOn ? '#ef4444' : '#22c55e';
-                    setGaugeValue('circle-pump', isPumpOn ? 100 : 20);
+                    pumpVal.style.color = isPumpOn ? '#ef4444' : '#10b981';
 
-                    toggleBtn.innerText = isPumpOn ? "TURN OFF PUMP" : "TURN ON PUMP";
+                    toggleBtn.innerText = isPumpOn ? "Turn Off Pump" : "Turn On Pump";
                     toggleBtn.className = isPumpOn ? "btn-pump pump-on" : "btn-pump pump-off";
                 }
             }
         }
 
-        // Toggle Pump ON/OFF
+        // Toggle Pump State
         async function togglePump() {
             let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             let currentStatus = data && data.length > 0 ? !!data[0].pump_status : false;
@@ -519,13 +481,12 @@
             }]);
 
             if (error) {
-                alert("Error updating pump state: " + error.message);
+                alert("Error modifying pump status: " + error.message);
             } else {
                 loadLiveSensorData();
             }
         }
 
-        // Initial load & automatic polling
         loadLiveSensorData();
         setInterval(loadLiveSensorData, 3000);
     </script>

@@ -136,7 +136,7 @@
                 </div>
 
                 <div class="section-box">
-                    <h4 style="margin-top: 0;">🗺️ Live Customer Location Map</h4>
+                    <h4 style="margin-top: 0;">🗺️ Live Customer Location Map (Satellite View)</h4>
                     <div id="map"></div>
                 </div>
 
@@ -339,12 +339,15 @@
             }
         }
 
+        // UPDATED MAP FUNCTION FOR SATELLITE VIEW (NO API KEY NEEDED)
         function initMap() {
             if (!map) {
-                map = L.map('map').setView([10.1557, 124.4831], 12);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap & CartoDB'
+                map = L.map('map').setView([10.1557, 124.4831], 13);
+                
+                // ArcGIS Esri World Imagery Satellite Tiles
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 18,
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                 }).addTo(map);
             }
             setTimeout(() => { map.invalidateSize(); }, 300);

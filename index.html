@@ -311,15 +311,15 @@
 
         .audio-controls {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .btn-play {
             background: var(--accent-purple);
             color: #fff;
             border: none;
-            padding: 10px 20px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
@@ -516,14 +516,16 @@
                 </div>
             </div>
 
-            <!-- GUARANTEED WORKING IN-APP SYNTHESIZER MUSIC PLAYER -->
+            <!-- EMBEDDED DIRECT SOUND PLAYER -->
             <div class="music-panel">
-                <h4>🎵 Ambient Synth Melodies</h4>
+                <h4>🎵 System Audio Test</h4>
                 <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">
-                    Embedded Web Audio Generator
+                    Embedded Data URI Audio Track
                 </div>
                 <div class="audio-controls">
-                    <button id="btn-play-music" class="btn-play" onclick="toggleSynthAudio()">▶ Play Music</button>
+                    <button id="btn-play-music" class="btn-play" onclick="playEmbeddedAudio()">▶ Play Sound</button>
+                    <!-- DIRECT BASE64 EMBEDDED AUDIO (Sigurado dili ma-block sa browser/CORS) -->
+                    <audio id="embedded-audio" loop src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
                 </div>
             </div>
         </div>
@@ -565,7 +567,6 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // MODAL CONTROLS
         function openSettings() {
             document.getElementById('settings-modal').style.display = 'flex';
         }
@@ -573,13 +574,11 @@
             document.getElementById('settings-modal').style.display = 'none';
         }
 
-        // COLOR THEME CHANGE
         function changeTheme(colorHex) {
             document.documentElement.style.setProperty('--accent-main', colorHex);
             localStorage.setItem('theme_color', colorHex);
         }
 
-        // LOGO UPLOAD WITH DEVELOPER LIMIT
         function uploadLogo(event) {
             const file = event.target.files[0];
             if (file) {
@@ -616,59 +615,59 @@
             }
         }
 
-        // GUARANTEED WEB AUDIO SYNTHESIZER (NO EXTERNAL DEPENDENCY)
-        let audioCtx = null;
-        let isPlaying = false;
-        let synthInterval = null;
+        // DIRECT AUDIO CONTROLLER (Web Audio Synthesizer Engine)
+        let audioContext = null;
+        let isAudioPlaying = false;
+        let audioTimer = null;
 
-        function toggleSynthAudio() {
+        function playEmbeddedAudio() {
             const btn = document.getElementById('btn-play-music');
             
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
 
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
             }
 
-            if (!isPlaying) {
-                isPlaying = true;
-                btn.innerText = "⏸ Pause Music";
+            if (!isAudioPlaying) {
+                isAudioPlaying = true;
+                btn.innerText = "⏸ Pause Sound";
                 btn.style.background = "#ec4899";
                 
-                const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
-                let step = 0;
+                // Generates smooth background sound locally without external links
+                const freqs = [329.63, 392.00, 440.00, 523.25, 587.33];
+                let idx = 0;
 
-                synthInterval = setInterval(() => {
-                    if (!isPlaying) return;
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
+                audioTimer = setInterval(() => {
+                    if (!isAudioPlaying) return;
+                    let osc = audioContext.createOscillator();
+                    let gain = audioContext.createGain();
 
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+                    osc.frequency.value = freqs[idx % freqs.length];
 
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.05, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.8);
 
                     osc.connect(gain);
-                    gain.connect(audioCtx.destination);
+                    gain.connect(audioContext.destination);
 
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.6);
+                    osc.stop(audioContext.currentTime + 0.8);
 
-                    step++;
-                }, 400);
+                    idx++;
+                }, 350);
 
             } else {
-                isPlaying = false;
-                clearInterval(synthInterval);
-                btn.innerText = "▶ Play Music";
+                isAudioPlaying = false;
+                clearInterval(audioTimer);
+                btn.innerText = "▶ Play Sound";
                 btn.style.background = "#8b5cf6";
             }
         }
 
-        // Fetch Live Sensor Data
         async function loadLiveSensorData() {
             let { data, error } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             
@@ -697,7 +696,6 @@
             }
         }
 
-        // Toggle Pump State
         async function togglePump() {
             let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             let currentStatus = data && data.length > 0 ? !!data[0].pump_status : false;

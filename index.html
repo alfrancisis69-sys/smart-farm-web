@@ -309,21 +309,28 @@
             color: var(--accent-purple);
         }
 
-        .audio-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .custom-audio-player {
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            outline: none;
         }
 
-        .btn-play {
-            background: var(--accent-purple);
-            color: #fff;
-            border: none;
-            padding: 12px;
+        .upload-audio-btn {
+            background: #1e293b;
+            color: var(--accent-main);
+            border: 1px dashed var(--accent-main);
+            padding: 10px;
             border-radius: 8px;
-            font-weight: 700;
+            text-align: center;
             cursor: pointer;
-            width: 100%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .upload-audio-btn:hover {
+            background: rgba(6, 182, 212, 0.1);
         }
 
         .modal-overlay {
@@ -480,7 +487,7 @@
             </div>
         </div>
 
-        <!-- LOWER SECTION: SUPPORT & IN-APP MUSIC PLAYER -->
+        <!-- LOWER SECTION: SUPPORT & CUSTOM AUDIO UPLOADER PLAYER -->
         <div class="lower-grid">
             <div class="support-panel">
                 <h3>🛠️ Technical Support & Maintenance Assistance</h3>
@@ -516,17 +523,24 @@
                 </div>
             </div>
 
-            <!-- EMBEDDED DIRECT SOUND PLAYER -->
+            <!-- CUSTOM MUSIC UPLOADER & PLAYER -->
             <div class="music-panel">
-                <h4>🎵 System Audio Test</h4>
+                <h4>🎵 System Background Audio</h4>
                 <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">
-                    Embedded Data URI Audio Track
+                    Upload custom music track (.mp3, .wav)
                 </div>
-                <div class="audio-controls">
-                    <button id="btn-play-music" class="btn-play" onclick="playEmbeddedAudio()">▶ Play Sound</button>
-                    <!-- DIRECT BASE64 EMBEDDED AUDIO (Sigurado dili ma-block sa browser/CORS) -->
-                    <audio id="embedded-audio" loop src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
+
+                <label for="audio-file-input" class="upload-audio-btn">
+                    <i class="fa-solid fa-upload"></i> Choose Music File
+                </label>
+                <input type="file" id="audio-file-input" accept="audio/*" style="display: none;" onchange="handleAudioUpload(event)">
+
+                <div id="file-name-display" style="font-size: 11px; color: var(--accent-main); margin-bottom: 8px; text-align: center; word-break: break-all;">
+                    No audio selected
                 </div>
+
+                <!-- STANDARD PLAYER WITH PLAY, PAUSE, VOLUME CONTROLS -->
+                <audio id="custom-audio-player" class="custom-audio-player" controls loop></audio>
             </div>
         </div>
     </div>
@@ -602,6 +616,22 @@
             closeSettings();
         }
 
+        // AUDIO UPLOAD & PLAYER FUNCTIONALITY
+        function handleAudioUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const audioPlayer = document.getElementById('custom-audio-player');
+                const nameDisplay = document.getElementById('file-name-display');
+                
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                nameDisplay.innerText = "Playing: " + file.name;
+
+                // Auto-play on user upload selection
+                audioPlayer.play().catch(e => console.log("User interaction needed to autoplay: ", e));
+            }
+        }
+
         function loadSavedCustomizations() {
             const savedColor = localStorage.getItem('theme_color');
             if (savedColor) {
@@ -612,59 +642,6 @@
             const savedLogo = localStorage.getItem('custom_logo');
             if (savedLogo) {
                 document.getElementById('app-logo').src = savedLogo;
-            }
-        }
-
-        // DIRECT AUDIO CONTROLLER (Web Audio Synthesizer Engine)
-        let audioContext = null;
-        let isAudioPlaying = false;
-        let audioTimer = null;
-
-        function playEmbeddedAudio() {
-            const btn = document.getElementById('btn-play-music');
-            
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-
-            if (!isAudioPlaying) {
-                isAudioPlaying = true;
-                btn.innerText = "⏸ Pause Sound";
-                btn.style.background = "#ec4899";
-                
-                // Generates smooth background sound locally without external links
-                const freqs = [329.63, 392.00, 440.00, 523.25, 587.33];
-                let idx = 0;
-
-                audioTimer = setInterval(() => {
-                    if (!isAudioPlaying) return;
-                    let osc = audioContext.createOscillator();
-                    let gain = audioContext.createGain();
-
-                    osc.type = 'sine';
-                    osc.frequency.value = freqs[idx % freqs.length];
-
-                    gain.gain.setValueAtTime(0.05, audioContext.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.8);
-
-                    osc.connect(gain);
-                    gain.connect(audioContext.destination);
-
-                    osc.start();
-                    osc.stop(audioContext.currentTime + 0.8);
-
-                    idx++;
-                }, 350);
-
-            } else {
-                isAudioPlaying = false;
-                clearInterval(audioTimer);
-                btn.innerText = "▶ Play Sound";
-                btn.style.background = "#8b5cf6";
             }
         }
 

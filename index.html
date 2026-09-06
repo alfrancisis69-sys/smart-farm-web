@@ -3,154 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart-Farm Management</title>
+    <title>Smart Farm Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --primary: #7d35f2; --admin: #1565c0; --bg: #1e1e2f; --text: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .login-card { background: #2a2a40; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); width: 100%; max-width: 400px; border: 1px solid #7d35f2; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #b19cd9; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #444; background: #1a1a2e; color: white; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        .btn-submit { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-submit:hover { opacity: 0.9; }
-        .msg-box { margin-top: 10px; font-size: 13px; text-align: center; display: none; }
-        .toggle-link { text-align: center; margin-top: 15px; font-size: 13px; color: #aaa; cursor: pointer; }
-        .toggle-link span { color: #b19cd9; font-weight: bold; text-decoration: underline; }
+        :root { 
+            --primary: #2e7d32; 
+            --bg: #121212; 
+            --card-bg: #1e1e1e; 
+            --text: #ffffff; 
+            --accent: #4ade80; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+        }
 
-        /* DASHBOARD */
-        #dashboard-view { display: none; }
-        .navbar { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .main-content { padding: 20px; max-width: 1100px; margin: auto; }
-        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card { background: #2a2a40; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #444; }
-        #map { height: 450px; width: 100%; border-radius: 8px; background: #111; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #2a2a40; border-radius: 8px; overflow: hidden; }
-        .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #444; font-size: 13px; color: #fff; }
-        .data-table th { background: #1a1a2e; color: #b19cd9; }
-        .btn-gmaps { background: #4285F4; color: white; border: none; padding: 5px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: inline-block; }
-        .btn-action { padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; color: white; font-weight: bold; }
-        .btn-edit { background: #ff9800; }
-        .btn-delete { background: #d32f2f; }
-        .btn-pump { width: 100%; margin-top: 10px; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
+        .navbar { 
+            background: var(--primary); 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+        }
+
+        .main-content { 
+            padding: 20px; 
+            max-width: 900px; 
+            margin: auto; 
+        }
+
+        .grid-cards { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-top: 20px; 
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+            border: 1px solid #333; 
+            text-align: center; 
+        }
+
+        .card h4 { 
+            margin: 0 0 10px 0; 
+            color: #bbb; 
+            font-size: 16px; 
+        }
+
+        .card .sensor-value { 
+            font-size: 32px; 
+            font-weight: bold; 
+            color: var(--accent); 
+            margin: 10px 0; 
+        }
+
+        .btn-pump { 
+            width: 100%; 
+            padding: 15px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 16px; 
+            transition: 0.3s; 
+            margin-top: 10px; 
+        }
+
         .pump-on { background: #d32f2f; }
         .pump-off { background: #2e7d32; }
-        .section-box { background: #2a2a40; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #444; }
+        .pump-on:hover { background: #b71c1c; }
+        .pump-off:hover { background: #1b5e20; }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #4ade80;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="auth-view" class="login-wrapper">
-        <div class="login-card">
-            <h2 style="text-align: center; margin-top: 0;">🌱 Smart-Farm Login</h2>
-            
-            <div id="form-login">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Secure Farm Management Portal.</p>
-                <div class="form-group"><label>Username</label><input type="text" id="log-username" placeholder="Enter username"></div>
-                <div class="form-group"><label>Password</label><input type="password" id="log-password" placeholder="Enter password"></div>
-                <button class="btn-submit" onclick="loginUser()">Login</button>
-                <div class="toggle-link" onclick="switchForm('register')">Don't have an account? <span>Register here</span></div>
-                <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #ff6b6b;">Forgot password? <span>Reset</span></div>
-            </div>
-
-            <div id="form-register" style="display: none;">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Register New Farm Account.</p>
-                <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Farm Ubay"></div>
-                <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Create username"></div>
-                <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone" placeholder="09123456789"></div>
-                <button class="btn-submit" onclick="registerUser()">Register Farm</button>
-                <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
-            </div>
-
-            <div id="form-forgot" style="display: none;">
-                <p style="font-size: 12px; color: #aaa; text-align: center;">Reset your account password.</p>
-                <div class="form-group"><label>Username</label><input type="text" id="fog-username" placeholder="Enter your username"></div>
-                <div class="form-group"><label>New Password</label><input type="password" id="fog-newpassword" placeholder="Enter new password"></div>
-                <button class="btn-submit" style="background-color: #d32f2f;" onclick="resetPassword()">Update Password</button>
-                <div class="toggle-link" onclick="switchForm('login')">Back to <span>Login</span></div>
-            </div>
-
-            <div id="auth-msg" class="msg-box"></div>
-        </div>
+    <div class="navbar">
+        <h2 style="margin: 0;">🌱 Smart-Farm Management System</h2>
+        <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.8;"><span class="status-dot"></span> Live System Monitoring & Automation</p>
     </div>
 
-    <div id="dashboard-view">
-        <div class="navbar" id="top-navbar">
-            <div>
-                <h3 style="margin: 0; display: inline;">🌱 Smart-Farm Management</h3>
-                <span id="role-badge" style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 12px; margin-left: 10px;"></span>
-            </div>
-            <div>
-                <span id="user-display" style="margin-right: 15px;"></span>
-                <button onclick="logout()" style="background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="grid-cards">
-                <div class="card"><h4>🌡️ Temperature</h4><p id="val-temp" style="font-size: 24px; font-weight: bold;">28.5 °C</p></div>
-                <div class="card"><h4>💧 Soil Moisture</h4><p id="val-soil" style="font-size: 24px; font-weight: bold;">65 %</p></div>
-                <div class="card"><h4>🚰 Water Level</h4><p id="val-water" style="font-size: 24px; font-weight: bold;">80 %</p></div>
-                <div class="card">
-                    <h4>⚙️ Pump Control</h4>
-                    <p id="val-pump" style="font-size: 20px; font-weight: bold; color: #4ade80; margin: 5px 0;">OFF</p>
-                    <div id="pump-control-container"></div>
-                </div>
+    <div class="main-content">
+        <div class="grid-cards">
+            <div class="card">
+                <h4>🌡️ Temperature</h4>
+                <div class="sensor-value" id="val-temp">-- °C</div>
             </div>
 
-            <div id="customer-report-section" class="section-box" style="display: none;">
-                <h4 style="margin-top:0; color: #b19cd9;">🚨 Report Farm Error / Broken Tool to Admin</h4>
-                <div class="form-group">
-                    <label>Issue Type / Component</label>
-                    <select id="rep-issue-type">
-                        <option value="Temperature Sensor">Temperature Sensor Error</option>
-                        <option value="Soil Moisture Sensor">Soil Moisture Sensor Error</option>
-                        <option value="Water Level Sensor">Water Level Sensor Error</option>
-                        <option value="Water Pump">Water Pump / Relay Issue</option>
-                        <option value="Wiring / Power">Wiring / Power Supply Issue</option>
-                        <option value="Other">Other Error / Bug</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Description of Error / Problem</label>
-                    <textarea id="rep-description" rows="3" placeholder="Describe unsa ang nahitabo..."></textarea>
-                </div>
-                <button class="btn-submit" onclick="submitErrorReport()">Submit Report</button>
+            <div class="card">
+                <h4>💧 Soil Moisture</h4>
+                <div class="sensor-value" id="val-soil">-- %</div>
             </div>
 
-            <div id="admin-section" style="display: none;">
-                <div class="section-box">
-                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Reports & Bug Fixes</h4>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Farm / User</th><th>Issue Type</th><th>Description</th><th>Date / Time</th><th>Action</th></tr>
-                            </thead>
-                            <tbody id="admin-reports-body"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="card">
+                <h4>🚰 Water Tank Level</h4>
+                <div class="sensor-value" id="val-water">-- %</div>
+            </div>
 
-                <div class="section-box">
-                    <h4 style="margin-top: 0;">🗺️ Live Customer Location Map (Satellite View)</h4>
-                    <div id="map"></div>
-                </div>
-
-                <div class="section-box">
-                    <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Locations</h4>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Farm Name</th><th>Username</th><th>Latitude</th><th>Longitude</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="customer-list-body"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="card">
+                <h4>⚙️ Water Pump Status</h4>
+                <div class="sensor-value" id="val-pump" style="color: #4ade80;">OFF</div>
+                <button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>
             </div>
         </div>
     </div>
@@ -160,221 +130,36 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let map = null;
-        let userMarkersMap = {}; 
-        let isFirstLoad = true;
-        let currentUser = null;
-        let currentRole = null;
-        let watchId = null;
-
-        function getExactGPSLocation() {
-            return new Promise((resolve) => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            resolve({
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            });
-                        },
-                        (error) => {
-                            console.warn("GPS access denied/failed, using fallback:", error);
-                            resolve({ lat: 10.1557, lng: 124.4831 });
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                    );
-                } else {
-                    resolve({ lat: 10.1557, lng: 124.4831 });
-                }
-            });
-        }
-
-        function startLiveTracking(username) {
-            if ("geolocation" in navigator) {
-                watchId = navigator.geolocation.watchPosition(
-                    async (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-
-                        await _supabase.from('users').update({
-                            latitude: lat,
-                            longitude: lng,
-                            last_login: new Date().toISOString()
-                        }).eq('username', username);
-                    },
-                    (err) => console.warn("Live tracking error:", err),
-                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-                );
-            }
-        }
-
-        function switchForm(formName) {
-            document.getElementById('form-login').style.display = formName === 'login' ? 'block' : 'none';
-            document.getElementById('form-register').style.display = formName === 'register' ? 'block' : 'none';
-            document.getElementById('form-forgot').style.display = formName === 'forgot' ? 'block' : 'none';
-            document.getElementById('auth-msg').style.display = 'none';
-        }
-
-        async function registerUser() {
-            const fullname = document.getElementById('reg-fullname').value.trim();
-            const username = document.getElementById('reg-username').value.trim();
-            const password = document.getElementById('reg-password').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-
-            if (!fullname || !username || !password) {
-                showMsg("Please fill in all required fields.", "red");
-                return;
-            }
-
-            let { data: existing } = await _supabase.from('users').select('*').eq('username', username).maybeSingle();
-            if (existing) {
-                showMsg("Username already taken.", "red");
-                return;
-            }
-
-            let coords = await getExactGPSLocation();
-
-            const { error } = await _supabase.from('users').insert([{
-                full_name: fullname,
-                username: username,
-                password: password,
-                phone_number: phone,
-                role: 'customer',
-                latitude: coords.lat,
-                longitude: coords.lng,
-                last_login: new Date().toISOString()
-            }]);
-
-            if (error) {
-                showMsg("Registration error: " + error.message, "red");
-            } else {
-                alert("Registration successful!");
-                launchDashboard(username, 'customer', fullname);
-            }
-        }
-
-        async function loginUser() {
-            const username = document.getElementById('log-username').value.trim();
-            const password = document.getElementById('log-password').value.trim();
-
-            if (!username || !password) {
-                showMsg("Please enter username and password.", "red");
-                return;
-            }
-
-            let { data, error } = await _supabase.from('users').select('*').eq('username', username);
-
-            if (error || !data || data.length === 0) {
-                showMsg("User account not found.", "red");
-                return;
-            }
-
-            let user = data[0];
-            if (user.password !== password) {
-                showMsg("Incorrect password.", "red");
-                return;
-            }
-
-            let coords = await getExactGPSLocation();
-
-            await _supabase.from('users').update({ 
-                latitude: coords.lat, 
-                longitude: coords.lng, 
-                last_login: new Date().toISOString() 
-            }).eq('username', username);
-
-            launchDashboard(username, user.role, user.full_name);
-        }
-
-        async function resetPassword() {
-            const username = document.getElementById('fog-username').value.trim();
-            const newpass = document.getElementById('fog-newpassword').value.trim();
-
-            if (!username || !newpass) {
-                showMsg("Please enter username and new password.", "red");
-                return;
-            }
-
-            let { data } = await _supabase.from('users').select('*').eq('username', username);
-            if (!data || data.length === 0) {
-                showMsg("Username not found.", "red");
-                return;
-            }
-
-            await _supabase.from('users').update({ password: newpass }).eq('username', username);
-            alert("Password updated successfully!");
-            switchForm('login');
-        }
-
-        function launchDashboard(username, role, fullname) {
-            currentUser = fullname || username;
-            currentRole = role;
-
-            document.getElementById('auth-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'block';
-            document.getElementById('user-display').innerText = "👤 " + currentUser;
-            document.getElementById('role-badge').innerText = role.toUpperCase();
-
-            loadLiveSensorData();
-            setInterval(loadLiveSensorData, 4000);
-
-            const pumpContainer = document.getElementById('pump-control-container');
-
-            if (role === 'admin') {
-                document.getElementById('top-navbar').style.background = '#1565c0';
-                document.getElementById('admin-section').style.display = 'block';
-                document.getElementById('customer-report-section').style.display = 'none';
-                pumpContainer.innerHTML = `<span style="font-size:11px; color:#aaa;">(Admin Monitor)</span>`;
-                
-                initMap();
-                loadAdminCustomers();
-                loadAdminReports();
-                setInterval(loadAdminCustomers, 5000); 
-            } else {
-                document.getElementById('admin-section').style.display = 'none';
-                document.getElementById('customer-report-section').style.display = 'block';
-                pumpContainer.innerHTML = `<button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>`;
-                
-                startLiveTracking(username);
-            }
-        }
-
-        // UPDATED MAP FUNCTION FOR SATELLITE VIEW (NO API KEY NEEDED)
-        function initMap() {
-            if (!map) {
-                map = L.map('map').setView([10.1557, 124.4831], 13);
-                
-                // ArcGIS Esri World Imagery Satellite Tiles
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 18,
-                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                }).addTo(map);
-            }
-            setTimeout(() => { map.invalidateSize(); }, 300);
-        }
-
+        // Fetch Live Data continuously every 3 seconds
         async function loadLiveSensorData() {
-            let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
+            let { data, error } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
+            
+            if (error) {
+                console.error("Error fetching sensor data:", error);
+                return;
+            }
+
             if (data && data.length > 0) {
                 let reading = data[0];
                 document.getElementById('val-temp').innerText = (reading.temperature ?? '28.5') + ' °C';
                 document.getElementById('val-soil').innerText = (reading.soil_moisture ?? '65') + ' %';
                 document.getElementById('val-water').innerText = (reading.water_level ?? '80') + ' %';
                 
-                if(reading.pump_status !== undefined) {
+                if (reading.pump_status !== undefined) {
                     const isPumpOn = !!reading.pump_status;
-                    document.getElementById('val-pump').innerText = isPumpOn ? 'ON' : 'OFF';
-                    document.getElementById('val-pump').style.color = isPumpOn ? '#f87171' : '#4ade80';
-
+                    const pumpVal = document.getElementById('val-pump');
                     const toggleBtn = document.getElementById('btn-toggle-pump');
-                    if (toggleBtn) {
-                        toggleBtn.innerText = isPumpOn ? "TURN OFF PUMP" : "TURN ON PUMP";
-                        toggleBtn.className = isPumpOn ? "btn-pump pump-on" : "btn-pump pump-off";
-                    }
+
+                    pumpVal.innerText = isPumpOn ? 'ON' : 'OFF';
+                    pumpVal.style.color = isPumpOn ? '#f87171' : '#4ade80';
+
+                    toggleBtn.innerText = isPumpOn ? "TURN OFF PUMP" : "TURN ON PUMP";
+                    toggleBtn.className = isPumpOn ? "btn-pump pump-on" : "btn-pump pump-off";
                 }
             }
         }
 
+        // Toggle Pump ON/OFF
         async function togglePump() {
             let { data } = await _supabase.from('sensor_data').select('*').order('id', { ascending: false }).limit(1);
             let currentStatus = data && data.length > 0 ? !!data[0].pump_status : false;
@@ -389,143 +174,15 @@
             }]);
 
             if (error) {
-                alert("Error updating pump: " + error.message);
+                alert("Error updating pump state: " + error.message);
             } else {
                 loadLiveSensorData();
             }
         }
 
-        async function submitErrorReport() {
-            const issueType = document.getElementById('rep-issue-type').value;
-            const description = document.getElementById('rep-description').value.trim();
-
-            if (!description) {
-                alert("Please describe the issue or error.");
-                return;
-            }
-
-            let { error } = await _supabase.from('farm_reports').insert([{
-                customer_name: currentUser,
-                issue_type: issueType,
-                description: description,
-                created_at: new Date().toISOString()
-            }]);
-
-            if (error) {
-                alert("Error: " + error.message);
-            } else {
-                alert("Report successfully submitted!");
-                document.getElementById('rep-description').value = '';
-            }
-        }
-
-        async function loadAdminReports() {
-            let { data: reports, error } = await _supabase.from('farm_reports').select('*').order('id', { ascending: false });
-            const tableBody = document.getElementById('admin-reports-body');
-            tableBody.innerHTML = '';
-
-            if (error || !reports || reports.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No bug reports found.</td></tr>`;
-                return;
-            }
-
-            reports.forEach(r => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><b>${r.customer_name || 'N/A'}</b></td>
-                        <td><span style="color: #f87171; font-weight: bold;">${r.issue_type}</span></td>
-                        <td>${r.description}</td>
-                        <td>${r.created_at ? new Date(r.created_at).toLocaleString() : 'N/A'}</td>
-                        <td><button class="btn-action btn-edit" onclick="resolveReport(${r.id})">Mark Fixed</button></td>
-                    </tr>`;
-            });
-        }
-
-        async function resolveReport(reportId) {
-            if (confirm("Mark this issue as fixed/resolved?")) {
-                await _supabase.from('farm_reports').delete().eq('id', reportId);
-                alert("Report resolved and removed!");
-                loadAdminReports();
-            }
-        }
-
-        async function loadAdminCustomers() {
-            let { data: users } = await _supabase.from('users').select('*').eq('role', 'customer');
-            const tableBody = document.getElementById('customer-list-body');
-            tableBody.innerHTML = '';
-
-            if (users && users.length > 0) {
-                let bounds = [];
-
-                for (let u of users) {
-                    if (u.latitude && u.longitude) {
-                        const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        const latLng = [u.latitude, u.longitude];
-                        bounds.push(latLng);
-
-                        if (userMarkersMap[u.username]) {
-                            userMarkersMap[u.username].setLatLng(latLng);
-                        } else {
-                            const marker = L.marker(latLng).addTo(map).bindPopup(`<b>${u.full_name || u.username}</b><br>Live Location<br>Phone: ${u.phone_number || 'N/A'}`);
-                            userMarkersMap[u.username] = marker;
-                        }
-
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td><b>${u.full_name || 'N/A'}</b></td>
-                                <td>${u.username}</td>
-                                <td>${u.latitude.toFixed(5)}</td>
-                                <td>${u.longitude.toFixed(5)}</td>
-                                <td>
-                                    <a href="${gmapsUrl}" target="_blank" class="btn-gmaps">🗺️ Open Map</a>
-                                    <button class="btn-action btn-edit" onclick="editCustomer('${u.username}', '${u.full_name || ''}')">Edit</button>
-                                    <button class="btn-action btn-delete" onclick="deleteCustomer('${u.username}')">Remove</button>
-                                </td>
-                            </tr>`;
-                    }
-                }
-
-                if (isFirstLoad && bounds.length > 0) {
-                    map.fitBounds(bounds, { maxZoom: 15 });
-                    isFirstLoad = false;
-                }
-            } else {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No registered customers found.</td></tr>`;
-            }
-        }
-
-        async function editCustomer(username, oldName) {
-            const newName = prompt("Enter new Farm / Customer Name:", oldName);
-            if (newName !== null && newName.trim() !== "") {
-                await _supabase.from('users').update({ full_name: newName.trim() }).eq('username', username);
-                alert("Customer name updated!");
-                loadAdminCustomers();
-            }
-        }
-
-        async function deleteCustomer(username) {
-            if (confirm(`Are you sure you want to remove customer "${username}"?`)) {
-                await _supabase.from('users').delete().eq('username', username);
-                if (userMarkersMap[username]) {
-                    map.removeLayer(userMarkersMap[username]);
-                    delete userMarkersMap[username];
-                }
-                alert("Customer removed.");
-                loadAdminCustomers();
-            }
-        }
-
-        function showMsg(text, color) {
-            const msgBox = document.getElementById('auth-msg');
-            msgBox.style.color = color;
-            msgBox.innerText = text;
-            msgBox.style.display = 'block';
-        }
-
-        function logout() {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            window.location.reload();
-        }
+        // Initial load & automatic polling
+        loadLiveSensorData();
+        setInterval(loadLiveSensorData, 3000);
     </script>
 </body>
 </html>

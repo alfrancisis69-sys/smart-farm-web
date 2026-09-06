@@ -280,12 +280,10 @@
     <div class="music-player-bar">
         <div class="music-info">
             🎵 <strong>La De Cadanse</strong>
-            <span>80s Radio Drama Nostalgia</span>
+            <span>80s Radio Drama Music</span>
         </div>
         <button id="btn-play-music" class="btn-music" onclick="toggleAudio()">▶ Play</button>
-        <audio id="bg-audio" loop preload="auto">
-            <source src="https://ia800908.us.archive.org/21/items/LaDecadanseRadioDramaTheme/La%20Decadanse%20%28Radio%20Drama%20Theme%29.mp3" type="audio/mpeg">
-        </audio>
+        <audio id="bg-audio" loop crossorigin="anonymous" src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg"></audio>
     </div>
 
     <script>
@@ -303,8 +301,9 @@
                     playBtn.innerText = "⏸ Pause";
                     playBtn.style.background = "#d32f2f";
                 }).catch((err) => {
-                    console.error("Playback error:", err);
-                    alert("Could not load music. Please check your internet connection.");
+                    console.error("Audio error:", err);
+                    // Fallback to direct audio window stream if browser blocks cross-origin playback
+                    window.open('https://www.youtube.com/results?search_query=La+De+Cadanse+80s+Philippine+Radio+Drama', '_blank');
                 });
             } else {
                 audio.pause();

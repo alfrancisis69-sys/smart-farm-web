@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Futuristic Smart Farm Dashboard</title>
+    <title>Smart Farm Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome Vector Icons (Para sa Official Facebook Logo) -->
+    <!-- FontAwesome Vector Icons (Para sa Official Facebook Logo ug Gear Icon) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -13,10 +13,9 @@
             --panel-bg: #0d131d;
             --card-surface: #121926;
             --border-glow: #1e293b;
-            --accent-teal: #06b6d4;
+            --accent-main: #06b6d4; /* Default Accent Theme */
             --accent-green: #10b981;
             --accent-purple: #8b5cf6;
-            --accent-pink: #ec4899;
             --text-main: #f1f5f9;
             --text-sub: #64748b;
         }
@@ -53,6 +52,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            position: relative;
         }
 
         /* HEADER SECTION */
@@ -66,14 +66,34 @@
             border: 1px solid var(--border-glow);
         }
 
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .custom-logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--accent-main);
+        }
+
         .dashboard-header h2 {
             margin: 0;
             font-size: 22px;
             letter-spacing: 1px;
-            background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-main), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .status-badge {
@@ -97,6 +117,21 @@
             box-shadow: 0 0 10px var(--accent-green);
         }
 
+        .btn-settings {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid var(--border-glow);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-settings:hover {
+            background: var(--accent-main);
+            color: #000;
+        }
+
         /* GRID LAYOUT */
         .grid-container {
             display: grid;
@@ -118,7 +153,7 @@
 
         .card:hover {
             transform: translateY(-4px);
-            border-color: rgba(6, 182, 212, 0.4);
+            border-color: var(--accent-main);
             box-shadow: 0 12px 25px rgba(6, 182, 212, 0.15);
         }
 
@@ -206,7 +241,7 @@
         .support-panel h3 {
             margin-top: 0;
             font-size: 16px;
-            color: var(--accent-teal);
+            color: var(--accent-main);
         }
 
         .contact-row {
@@ -220,7 +255,7 @@
             background: #090d16;
             padding: 12px 15px;
             border-radius: 8px;
-            border-left: 3px solid var(--accent-teal);
+            border-left: 3px solid var(--accent-main);
             flex: 1;
         }
 
@@ -265,7 +300,7 @@
             padding-left: 20px;
         }
 
-        /* BUILT-IN MUSIC PLAYER */
+        /* IN-APP MUSIC PLAYER */
         .music-panel {
             background: var(--card-surface);
             border: 1px solid var(--border-glow);
@@ -299,8 +334,71 @@
             width: 100%;
         }
 
-        .btn-play:hover {
-            background: #7c3aed;
+        /* CUSTOMIZATION MODAL (DEVELOPER & USER CONTROL) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-box {
+            background: #0d131d;
+            border: 2px solid var(--accent-main);
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+
+        .modal-box h3 {
+            margin-top: 0;
+            color: var(--accent-main);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #121926;
+            border: 1px solid var(--border-glow);
+            color: #fff;
+            border-radius: 8px;
+        }
+
+        .btn-save {
+            background: var(--accent-main);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-close {
+            background: transparent;
+            color: var(--text-sub);
+            border: none;
+            cursor: pointer;
+            float: right;
+            font-size: 16px;
         }
 
         @media (max-width: 900px) {
@@ -316,9 +414,17 @@
     <div class="dashboard-frame">
         <!-- HEADER -->
         <div class="dashboard-header">
-            <h2>🌱 Smart farmmanagement System</h2>
-            <div class="status-badge">
-                <span class="status-dot"></span> Live System Monitoring & Automation
+            <div class="header-title-box">
+                <img id="app-logo" src="https://cdn-icons-png.flaticon.com/512/628/628324.png" class="custom-logo-img" alt="Logo">
+                <h2 id="app-title">Smart farmmanagement System</h2>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <span class="status-dot"></span> Live System Monitoring
+                </div>
+                <button class="btn-settings" onclick="openSettings()" title="Settings & Customization">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
             </div>
         </div>
 
@@ -360,7 +466,7 @@
             <!-- 3D MOUNTAIN WAVE VISUALIZER LAYER -->
             <div class="visualizer-card">
                 <div style="display: flex; justify-content: space-between; position: relative; z-index: 2;">
-                    <span style="font-weight: 700; color: var(--accent-teal); font-size: 14px;">ANALYTICAL TOPOGRAPHY & WAVE MATRIX</span>
+                    <span style="font-weight: 700; color: var(--accent-main); font-size: 14px;">ANALYTICAL TOPOGRAPHY & WAVE MATRIX</span>
                     <span style="color: var(--text-sub); font-size: 12px;">Realtime Data Stream</span>
                 </div>
 
@@ -383,7 +489,7 @@
             </div>
         </div>
 
-        <!-- LOWER SECTION: ORIGINAL SUPPORT & IN-APP MUSIC PLAYER -->
+        <!-- LOWER SECTION: SUPPORT & IN-APP MUSIC PLAYER -->
         <div class="lower-grid">
             <div class="support-panel">
                 <h3>🛠️ Technical Support & Maintenance Assistance</h3>
@@ -433,10 +539,94 @@
         </div>
     </div>
 
+    <!-- SETTINGS & CUSTOMIZATION MODAL -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-box">
+            <button class="btn-close" onclick="closeSettings()">✖</button>
+            <h3>⚙️ Dashboard Settings</h3>
+
+            <div class="form-group">
+                <label>Theme / Accent Color</label>
+                <select id="input-theme" onchange="changeTheme(this.value)">
+                    <option value="#06b6d4">Teal Blue (Default)</option>
+                    <option value="#10b981">Emerald Green</option>
+                    <option value="#8b5cf6">Neon Purple</option>
+                    <option value="#ec4899">Hot Pink</option>
+                    <option value="#eab308">Cyber Gold</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Custom System Logo (Max 2MB - Developer Limit)</label>
+                <input type="file" id="input-logo" accept="image/*" onchange="uploadLogo(event)">
+            </div>
+
+            <div class="form-group">
+                <label>Developer PIN Code</label>
+                <input type="password" id="input-pin" placeholder="Enter PIN to unlock full settings">
+            </div>
+
+            <button class="btn-save" onclick="saveSettings()">Save & Apply Changes</button>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://fqqwlvreqnxkbvbjjrol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // MODAL CONTROLS
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        // COLOR THEME CHANGE
+        function changeTheme(colorHex) {
+            document.documentElement.style.setProperty('--accent-main', colorHex);
+            localStorage.setItem('theme_color', colorHex);
+        }
+
+        // LOGO UPLOAD WITH DEVELOPER LIMIT
+        function uploadLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Developer Limit: Max 2MB File Size
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Developer Limit: Ang image file dili pwedeng molapas sa 2MB!");
+                    event.target.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('app-logo').src = e.target.result;
+                    localStorage.setItem('custom_logo', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // SAVE & RESTORE SETTINGS
+        function saveSettings() {
+            alert("Customizations successfully applied!");
+            closeSettings();
+        }
+
+        function loadSavedCustomizations() {
+            const savedColor = localStorage.getItem('theme_color');
+            if (savedColor) {
+                document.documentElement.style.setProperty('--accent-main', savedColor);
+                document.getElementById('input-theme').value = savedColor;
+            }
+
+            const savedLogo = localStorage.getItem('custom_logo');
+            if (savedLogo) {
+                document.getElementById('app-logo').src = savedLogo;
+            }
+        }
 
         // SAFE IN-PAGE AUDIO PLAYER
         const audio = document.getElementById('bg-audio');
@@ -507,6 +697,7 @@
             }
         }
 
+        loadSavedCustomizations();
         loadLiveSensorData();
         setInterval(loadLiveSensorData, 3000);
     </script>

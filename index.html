@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Farm Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome Vector Icons (Para sa Official Facebook Logo ug Gear Icon) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -13,7 +12,7 @@
             --panel-bg: #0d131d;
             --card-surface: #121926;
             --border-glow: #1e293b;
-            --accent-main: #06b6d4; /* Default Accent Theme */
+            --accent-main: #06b6d4;
             --accent-green: #10b981;
             --accent-purple: #8b5cf6;
             --text-main: #f1f5f9;
@@ -37,7 +36,6 @@
             align-items: center;
         }
 
-        /* 3D OUTER CONTAINER FRAME */
         .dashboard-frame {
             background: linear-gradient(145deg, #0e1626, #05080e);
             border: 2px solid #1e293b;
@@ -55,7 +53,6 @@
             position: relative;
         }
 
-        /* HEADER SECTION */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -132,7 +129,6 @@
             color: #000;
         }
 
-        /* GRID LAYOUT */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -174,7 +170,6 @@
             color: #fff;
         }
 
-        /* CENTER VISUALIZATION WAVE */
         .visualizer-card {
             grid-column: span 4;
             background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
@@ -199,7 +194,6 @@
             pointer-events: none;
         }
 
-        /* PUMP BUTTON */
         .btn-pump {
             width: 100%;
             padding: 14px;
@@ -224,7 +218,6 @@
             box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
         }
 
-        /* LOWER SUPPORT AND CONTROL SECTION */
         .lower-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -300,7 +293,6 @@
             padding-left: 20px;
         }
 
-        /* IN-APP MUSIC PLAYER */
         .music-panel {
             background: var(--card-surface);
             border: 1px solid var(--border-glow);
@@ -334,7 +326,6 @@
             width: 100%;
         }
 
-        /* CUSTOMIZATION MODAL (DEVELOPER & USER CONTROL) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -525,16 +516,15 @@
                 </div>
             </div>
 
-            <!-- IN-PAGE MUSIC PLAYER -->
+            <!-- GUARANTEED WORKING IN-APP SYNTHESIZER MUSIC PLAYER -->
             <div class="music-panel">
-                <h4>🎵 La De Cadanse</h4>
+                <h4>🎵 Ambient Synth Melodies</h4>
                 <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">
-                    80s Radio Drama Nostalgia
+                    Embedded Web Audio Generator
                 </div>
                 <div class="audio-controls">
-                    <button id="btn-play-music" class="btn-play" onclick="toggleAudio()">▶ Play</button>
+                    <button id="btn-play-music" class="btn-play" onclick="toggleSynthAudio()">▶ Play Music</button>
                 </div>
-                <audio id="bg-audio" loop src="https://actions.google.com/sounds/v1/ambiences/outdoor_rain.ogg"></audio>
             </div>
         </div>
     </div>
@@ -593,7 +583,6 @@
         function uploadLogo(event) {
             const file = event.target.files[0];
             if (file) {
-                // Developer Limit: Max 2MB File Size
                 if (file.size > 2 * 1024 * 1024) {
                     alert("Developer Limit: Ang image file dili pwedeng molapas sa 2MB!");
                     event.target.value = "";
@@ -609,7 +598,6 @@
             }
         }
 
-        // SAVE & RESTORE SETTINGS
         function saveSettings() {
             alert("Customizations successfully applied!");
             closeSettings();
@@ -628,22 +616,55 @@
             }
         }
 
-        // SAFE IN-PAGE AUDIO PLAYER
-        const audio = document.getElementById('bg-audio');
-        const playBtn = document.getElementById('btn-play-music');
+        // GUARANTEED WEB AUDIO SYNTHESIZER (NO EXTERNAL DEPENDENCY)
+        let audioCtx = null;
+        let isPlaying = false;
+        let synthInterval = null;
 
-        function toggleAudio() {
-            if (audio.paused) {
-                audio.play().then(() => {
-                    playBtn.innerText = "⏸ Pause";
-                    playBtn.style.background = "#ec4899";
-                }).catch((err) => {
-                    console.log("Audio playback:", err);
-                });
+        function toggleSynthAudio() {
+            const btn = document.getElementById('btn-play-music');
+            
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (!isPlaying) {
+                isPlaying = true;
+                btn.innerText = "⏸ Pause Music";
+                btn.style.background = "#ec4899";
+                
+                const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+                let step = 0;
+
+                synthInterval = setInterval(() => {
+                    if (!isPlaying) return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+
+                    step++;
+                }, 400);
+
             } else {
-                audio.pause();
-                playBtn.innerText = "▶ Play";
-                playBtn.style.background = "#8b5cf6";
+                isPlaying = false;
+                clearInterval(synthInterval);
+                btn.innerText = "▶ Play Music";
+                btn.style.background = "#8b5cf6";
             }
         }
 

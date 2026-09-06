@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart-Farm Management</title>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Leaflet JS & CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -45,12 +43,10 @@
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN -->
     <div id="auth-view" class="login-wrapper">
         <div class="login-card">
             <h2 style="text-align: center; margin-top: 0;">🌱 Smart-Farm Login</h2>
             
-            <!-- LOGIN FORM -->
             <div id="form-login">
                 <p style="font-size: 12px; color: #aaa; text-align: center;">Secure Farm Management Portal.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="log-username" placeholder="Enter username"></div>
@@ -60,7 +56,6 @@
                 <div class="toggle-link" onclick="switchForm('forgot')" style="margin-top: 5px; color: #ff6b6b;">Forgot password? <span>Reset</span></div>
             </div>
 
-            <!-- REGISTER FORM -->
             <div id="form-register" style="display: none;">
                 <p style="font-size: 12px; color: #aaa; text-align: center;">Register New Farm Account.</p>
                 <div class="form-group"><label>Full Name / Farm Name</label><input type="text" id="reg-fullname" placeholder="e.g. Yahiko Farm Ubay"></div>
@@ -71,7 +66,6 @@
                 <div class="toggle-link" onclick="switchForm('login')">Already have an account? <span>Login here</span></div>
             </div>
 
-            <!-- FORGOT PASSWORD FORM -->
             <div id="form-forgot" style="display: none;">
                 <p style="font-size: 12px; color: #aaa; text-align: center;">Reset your account password.</p>
                 <div class="form-group"><label>Username</label><input type="text" id="fog-username" placeholder="Enter your username"></div>
@@ -84,7 +78,6 @@
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
     <div id="dashboard-view">
         <div class="navbar" id="top-navbar">
             <div>
@@ -109,7 +102,6 @@
                 </div>
             </div>
 
-            <!-- CUSTOMER REPORT SECTION -->
             <div id="customer-report-section" class="section-box" style="display: none;">
                 <h4 style="margin-top:0; color: #b19cd9;">🚨 Report Farm Error / Broken Tool to Admin</h4>
                 <div class="form-group">
@@ -130,7 +122,6 @@
                 <button class="btn-submit" onclick="submitErrorReport()">Submit Report</button>
             </div>
 
-            <!-- ADMIN SECTION -->
             <div id="admin-section" style="display: none;">
                 <div class="section-box">
                     <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Reports & Bug Fixes</h4>
@@ -170,13 +161,12 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let map = null;
-        let userMarkersMap = {}; // Marker storage via username
+        let userMarkersMap = {}; 
         let isFirstLoad = true;
         let currentUser = null;
         let currentRole = null;
         let watchId = null;
 
-        // Exact GPS Geolocation Function (HTML5 Geolocation API)
         function getExactGPSLocation() {
             return new Promise((resolve) => {
                 if ("geolocation" in navigator) {
@@ -189,7 +179,7 @@
                         },
                         (error) => {
                             console.warn("GPS access denied/failed, using fallback:", error);
-                            resolve({ lat: 10.1557, lng: 124.4831 }); // Ubay Bohol Default
+                            resolve({ lat: 10.1557, lng: 124.4831 });
                         },
                         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                     );
@@ -199,7 +189,6 @@
             });
         }
 
-        // Live location sender for logged-in customer
         function startLiveTracking(username) {
             if ("geolocation" in navigator) {
                 watchId = navigator.geolocation.watchPosition(
@@ -340,7 +329,7 @@
                 initMap();
                 loadAdminCustomers();
                 loadAdminReports();
-                setInterval(loadAdminCustomers, 5000); // Live location sync every 5 seconds without reset
+                setInterval(loadAdminCustomers, 5000); 
             } else {
                 document.getElementById('admin-section').style.display = 'none';
                 document.getElementById('customer-report-section').style.display = 'block';
@@ -353,12 +342,12 @@
         function initMap() {
             if (!map) {
                 map = L.map('map').setView([10.1557, 124.4831], 12);
-                // Fast & Responsive OpenStreetMap CartoDB Tiles (Supports deep zoom up to 19)
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap & CartoDB'
+                    attribution: '© OpenStreetMap & CartoDB'
                 }).addTo(map);
             }
+            setTimeout(() => { map.invalidateSize(); }, 300);
         }
 
         async function loadLiveSensorData() {
@@ -471,11 +460,9 @@
                         const latLng = [u.latitude, u.longitude];
                         bounds.push(latLng);
 
-                        // If marker already exists, smoothly update position without resetting view
                         if (userMarkersMap[u.username]) {
                             userMarkersMap[u.username].setLatLng(latLng);
                         } else {
-                            // Create new marker
                             const marker = L.marker(latLng).addTo(map).bindPopup(`<b>${u.full_name || u.username}</b><br>Live Location<br>Phone: ${u.phone_number || 'N/A'}`);
                             userMarkersMap[u.username] = marker;
                         }
@@ -495,7 +482,6 @@
                     }
                 }
 
-                // Center/Fit map ONLY ON FIRST LOAD (stops force zoom out during auto-refresh)
                 if (isFirstLoad && bounds.length > 0) {
                     map.fitBounds(bounds, { maxZoom: 15 });
                     isFirstLoad = false;

@@ -29,7 +29,7 @@
         .main-content { padding: 20px; max-width: 1100px; margin: auto; }
         .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: #2a2a40; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #444; }
-        #map { height: 400px; width: 100%; border-radius: 8px; }
+        #map { height: 450px; width: 100%; border-radius: 8px; background: #111; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #2a2a40; border-radius: 8px; overflow: hidden; }
         .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #444; font-size: 13px; color: #fff; }
         .data-table th { background: #1a1a2e; color: #b19cd9; }
@@ -145,6 +145,11 @@
                 </div>
 
                 <div class="section-box">
+                    <h4 style="margin-top: 0;">🗺️ Live Customer Location Map</h4>
+                    <div id="map"></div>
+                </div>
+
+                <div class="section-box">
                     <h4 style="margin-top:0; color: #64b5f6;">📋 Customer Accounts & Locations</h4>
                     <div style="overflow-x: auto;">
                         <table class="data-table">
@@ -155,11 +160,6 @@
                         </table>
                     </div>
                 </div>
-
-                <div class="section-box">
-                    <h4 style="margin-top: 0;">🗺️ Live Customer Route Map</h4>
-                    <div id="map"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -169,7 +169,9 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxcXdsdnJlcW54a2J2Ympqcm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjI4NjksImV4cCI6MjEwMzIzODg2OX0.J_-GrhljQrMhJnzmSMhSJYUFCR7moiUF3oBIOW0YWUQ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let map, userMarkers = [], routePolylines = [];
+        let map = null;
+        let userMarkersMap = {}; // Marker storage via username
+        let isFirstLoad = true;
         let currentUser = null;
         let currentRole = null;
         let watchId = null;
@@ -197,7 +199,7 @@
             });
         }
 
-        // Start Live Tracking while Customer is Logged In
+        // Live location sender for logged-in customer
         function startLiveTracking(username) {
             if ("geolocation" in navigator) {
                 watchId = navigator.geolocation.watchPosition(
@@ -205,20 +207,11 @@
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
 
-                        // Update current user location in Supabase
                         await _supabase.from('users').update({
                             latitude: lat,
                             longitude: lng,
                             last_login: new Date().toISOString()
                         }).eq('username', username);
-
-                        // Save location log entry for live route tracing
-                        await _supabase.from('location_logs').insert([{
-                            username: username,
-                            latitude: lat,
-                            longitude: lng,
-                            recorded_at: new Date().toISOString()
-                        }]);
                     },
                     (err) => console.warn("Live tracking error:", err),
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
@@ -343,16 +336,16 @@
                 document.getElementById('admin-section').style.display = 'block';
                 document.getElementById('customer-report-section').style.display = 'none';
                 pumpContainer.innerHTML = `<span style="font-size:11px; color:#aaa;">(Admin Monitor)</span>`;
+                
                 initMap();
                 loadAdminCustomers();
                 loadAdminReports();
-                setInterval(loadAdminCustomers, 10000); // Refresh live location every 10s for admin
+                setInterval(loadAdminCustomers, 5000); // Live location sync every 5 seconds without reset
             } else {
                 document.getElementById('admin-section').style.display = 'none';
                 document.getElementById('customer-report-section').style.display = 'block';
                 pumpContainer.innerHTML = `<button id="btn-toggle-pump" class="btn-pump pump-off" onclick="togglePump()">TURN ON PUMP</button>`;
                 
-                // Start background live location tracing for customer
                 startLiveTracking(username);
             }
         }
@@ -360,8 +353,10 @@
         function initMap() {
             if (!map) {
                 map = L.map('map').setView([10.1557, 124.4831], 12);
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: 'Tiles &copy; Esri &mdash; Smart-Farm Mapping Layer'
+                // Fast & Responsive OpenStreetMap CartoDB Tiles (Supports deep zoom up to 19)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap & CartoDB'
                 }).addTo(map);
             }
         }
@@ -467,26 +462,22 @@
             const tableBody = document.getElementById('customer-list-body');
             tableBody.innerHTML = '';
 
-            userMarkers.forEach(m => map.removeLayer(m));
-            routePolylines.forEach(p => map.removeLayer(p));
-            userMarkers = [];
-            routePolylines = [];
-
             if (users && users.length > 0) {
                 let bounds = [];
+
                 for (let u of users) {
                     if (u.latitude && u.longitude) {
                         const gmapsUrl = `https://www.google.com/maps?q=${u.latitude},${u.longitude}`;
-                        const marker = L.marker([u.latitude, u.longitude]).addTo(map).bindPopup(`<b>${u.full_name}</b><br>Current Location<br>Phone: ${u.phone_number || 'N/A'}`);
-                        userMarkers.push(marker);
-                        bounds.push([u.latitude, u.longitude]);
+                        const latLng = [u.latitude, u.longitude];
+                        bounds.push(latLng);
 
-                        // Fetch location history to draw live route path line
-                        let { data: logs } = await _supabase.from('location_logs').select('latitude, longitude').eq('username', u.username).order('id', { ascending: true }).limit(50);
-                        if (logs && logs.length > 1) {
-                            let pathCoordinates = logs.map(l => [l.latitude, l.longitude]);
-                            let polyline = L.polyline(pathCoordinates, { color: '#00d2ff', weight: 4, opacity: 0.8 }).addTo(map);
-                            routePolylines.push(polyline);
+                        // If marker already exists, smoothly update position without resetting view
+                        if (userMarkersMap[u.username]) {
+                            userMarkersMap[u.username].setLatLng(latLng);
+                        } else {
+                            // Create new marker
+                            const marker = L.marker(latLng).addTo(map).bindPopup(`<b>${u.full_name || u.username}</b><br>Live Location<br>Phone: ${u.phone_number || 'N/A'}`);
+                            userMarkersMap[u.username] = marker;
                         }
 
                         tableBody.innerHTML += `
@@ -496,15 +487,18 @@
                                 <td>${u.latitude.toFixed(5)}</td>
                                 <td>${u.longitude.toFixed(5)}</td>
                                 <td>
-                                    <a href="${gmapsUrl}" target="_blank" class="btn-gmaps">🗺️ Maps</a>
+                                    <a href="${gmapsUrl}" target="_blank" class="btn-gmaps">🗺️ Open Map</a>
                                     <button class="btn-action btn-edit" onclick="editCustomer('${u.username}', '${u.full_name || ''}')">Edit</button>
                                     <button class="btn-action btn-delete" onclick="deleteCustomer('${u.username}')">Remove</button>
                                 </td>
                             </tr>`;
                     }
                 }
-                if (bounds.length > 0) {
+
+                // Center/Fit map ONLY ON FIRST LOAD (stops force zoom out during auto-refresh)
+                if (isFirstLoad && bounds.length > 0) {
                     map.fitBounds(bounds, { maxZoom: 15 });
+                    isFirstLoad = false;
                 }
             } else {
                 tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No registered customers found.</td></tr>`;
@@ -523,6 +517,10 @@
         async function deleteCustomer(username) {
             if (confirm(`Are you sure you want to remove customer "${username}"?`)) {
                 await _supabase.from('users').delete().eq('username', username);
+                if (userMarkersMap[username]) {
+                    map.removeLayer(userMarkersMap[username]);
+                    delete userMarkersMap[username];
+                }
                 alert("Customer removed.");
                 loadAdminCustomers();
             }
